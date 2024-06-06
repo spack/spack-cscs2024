@@ -33,7 +33,8 @@
 				<section>
 					<h2><code>Spec highlighting</code></h2>
 					<pre><code data-trim data-noescape class="spec">
-						$ spack spec --fresh zlib
+						$ spack spec \
+						      --fresh zlib
 						Input spec
 						--------------------------------
 						 -   zlib
@@ -69,7 +70,7 @@
 			QUOTED_VALUE = `('([^']|(?<=\\\\)')*'|\\"([^\\"]|(?<=\\\\)\\")*\\")`
 			ARCH = `(arch|target|os|platform)=${VALUE}`
 			KEY_VALUE_PAIR = `${NAME}=(${VALUE}|${QUOTED_VALUE})`
-			COMMAND_LINE = `^\\$.+$`
+			COMMAND_LINE = `^\\$.+(\\$)*$`
 			Reveal.initialize({
 				highlight: {
 					beforeHighlight: (hljs) => hljs.registerLanguage("spec", function() {
@@ -78,7 +79,8 @@
 							contains: [
 								{
 									className: "spec-command-line",
-									begin: COMMAND_LINE
+									begin: '^\\s*\\$',
+									end: '(?<!\\\\)$'  // allow newlines with \ at the end
 								},
 								{
 									className: 'spec-arch',

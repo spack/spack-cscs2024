@@ -78,7 +78,7 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
 .hljs-spec-variant {
   color: #2a7bde;
 }
-.hljs-spec-compiler {
+.hljs-spec-compiler, .hljs-spec-status-installed {
   color: #26a269;
 }
 .hljs-spec-version {
@@ -90,4 +90,7 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
 .hljs-spec-command-line {
   color: #fff;
   font-weight: bold;
+}
+.hljs-spec-status-uninstalled {
+  color: #5e5c64;
 }

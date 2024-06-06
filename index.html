@@ -44,8 +44,6 @@
 						 -       ^gcc-runtime@13.2.0%gcc@13.2.0 build_system=generic arch=linux-ubuntu23.10-zen2
 						[e]      ^glibc@2.38%gcc@13.2.0 build_system=autotools arch=linux-ubuntu23.10-zen2
 						 -       ^gmake@4.4.1%gcc@13.2.0~guile build_system=generic arch=linux-ubuntu23.10-zen2
-						
-						
 					</code></pre>
 				</section>
 			</div>
@@ -66,7 +64,7 @@
 			NAME = "[a-zA-Z_0-9][a-zA-Z_0-9\\-.]*"
 			PACKAGE = `\\^?${NAME}`
 			BOOL_VARIANT = `(~|~~|\\+|\\+\\+|-|--)\\s*${NAME}`
-			COMPILER = `%\\s*${NAME}`
+			COMPILER = `%\\s*${NAME}\\s*(${VERSION_SPECIFIER})?`
 			VALUE = "([a-zA-Z_0-9\\-+\\*.,:=\\~\\/\\\\]+)"
 			QUOTED_VALUE = `('([^']|(?<=\\\\)')*'|\\"([^\\"]|(?<=\\\\)\\")*\\")`
 			ARCH = `(arch|target|os|platform)=${VALUE}`

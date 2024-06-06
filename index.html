@@ -8,7 +8,7 @@
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/white.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -16,8 +16,35 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<section>
+						<img src="dist/images/logo.svg" />
+						<h1 class="r-fit-text">What's new in Spack?</h1>
+					</section>
+					<section>
+						<h2>What's new</h2>
+						<ul>
+							<li>Compiler runtime packages</li>
+							<li>Automatic libc external</li>
+							<li>Python virtual environments</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<h2><code>Spec highlighting</code></h2>
+					<pre><code data-trim data-noescape class="spec">
+						$ spack spec zlib-ng
+						    zlib-ng
+						    @2.1.6
+						    %clang@16.0.6
+						    +compat
+						    ++new_strategies
+						    ~opt
+						    ~~pic
+						    ^pkg build_system=autotools
+						    arch=linux-ubuntu23.10-zen2
+					</code></pre>
+				</section>
 			</div>
 		</div>
 
@@ -29,11 +56,59 @@
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
 			// - https://revealjs.com/config/
+			VERSION = "=?[a-zA-Z0-9_][a-zA-Z_0-9\\-\\.]*\\b"
+			VERSION_RANGE = `(${VERSION})?:(${VERSION}(?!\\s*=))?`
+			VERSION_LIST = `(${VERSION_RANGE}|${VERSION})(\\s*,\\s*(${VERSION_RANGE}|${VERSION}))*`
+			VERSION_SPECIFIER = `@\\s*(${VERSION_LIST})`
+			NAME = "[a-zA-Z_0-9][a-zA-Z_0-9\\-.]*"
+			PACKAGE = `\\^?${NAME}`
+			BOOL_VARIANT = `(~|~~|\\+|\\+\\+|-|--)\\s*${NAME}`
+			COMPILER = `%\\s*${NAME}`
+			VALUE = "([a-zA-Z_0-9\\-+\\*.,:=\\~\\/\\\\]+)"
+			QUOTED_VALUE = `('([^']|(?<=\\\\)')*'|\\"([^\\"]|(?<=\\\\)\\")*\\")`
+			ARCH = `(arch|target|os|platform)=${VALUE}`
+			KEY_VALUE_PAIR = `${NAME}=(${VALUE}|${QUOTED_VALUE})`
+			COMMAND_LINE = `^\\$.+$`
 			Reveal.initialize({
+				highlight: {
+					beforeHighlight: (hljs) => hljs.registerLanguage("spec", function() {
+						return {
+							case_insensitive: true,
+							contains: [
+								{
+									className: "spec-command-line",
+									begin: COMMAND_LINE
+								},
+								{
+									className: 'spec-arch',
+									begin: ARCH
+								},
+								{
+									className: 'spec-variant',
+									begin: KEY_VALUE_PAIR
+								},
+								{
+									className: 'class',
+									begin: PACKAGE
+								},
+								{
+									className: 'spec-version',
+									begin: VERSION_SPECIFIER
+								},
+								{
+									className: 'spec-variant',
+									begin: BOOL_VARIANT
+								},
+								{
+									className: 'spec-compiler',
+									begin: COMPILER
+								}
+							]
+						}
+					})
+				},
 				hash: true,
-
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ],
 			});
 		</script>
 	</body>

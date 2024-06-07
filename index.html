@@ -87,9 +87,47 @@
 						</ul>
 					</section>
 					<section>
-						<h2>Spack 0.22</h2>
-						<p>Compiler is still a node attribute</p>
-						<img class="stretch" src="dist/images/gcc-runtime-now.svg" />
+						<h2>Can't Spack build <code>glibc</code>?</h2>
+						<ul>
+							<li>👍 Spack would be isolated from the system
+								<ul>
+									<li>Better build reproducibility</li>
+								</ul>
+							</li>
+						</ul>
+						<p>but...</p>
+						<ul>
+							<li>👎 Spack would be isolated from the system
+								<ul>
+									<li>Complicates use of system compilers</li>
+									<li>Complicates use of externals</li>
+								</ul>
+							</li>
+						</ul>
+						<p>currently a non-goal</p>
+					</section>
+					<section>
+						<h2>Why not <code>^glibc-runtime</code></h2>
+						<ul>
+							<li>... and copy <code>libc.so.6</code>, <code>libm.so.6</code></li>
+							<li>Issue is mostly with hard-coded (search) paths to and in the dynamic loader</li>
+						</ul>
+					</section>
+					<section>
+						<h2>So here we are in Spack 0.22</h2>
+						<pre><code data-trim data-noescape>
+							$ spack spec zlib
+							Input spec
+							--------------------------------
+							 -   zlib
+
+							Concretized
+							--------------------------------
+							 -   zlib@1.3.1 %gcc@13.2.0 ...
+							 -       ^gcc-runtime@13.2.0 %gcc@13.2.0 ...
+							[e]      ^glibc@2.38 %gcc@13.2.0 ...
+							 -       ^gmake@4.4.1 %gcc@13.2.0 ...
+						</code></pre>
 					</section>
 					<section>
 						<h2>Spack 0.22</h2>
@@ -97,8 +135,13 @@
 						<img src="dist/images/gcc-runtime-mixing.svg" class="stretch" />
 					</section>
 					<section>
+						<h2>Spack 0.22</h2>
+						<p>Compiler is still a node attribute</p>
+						<img class="stretch" src="dist/images/gcc-runtime-now.svg" />
+					</section>
+					<section>
 						<h2>Spack 0.23 🔮</h2>
-						<p>Compiler is an ordinary node itself</p>
+						<p>Compiler becomes an ordinary node itself</p>
 						<img src="dist/images/gcc-runtime-future.svg" class="stretch" />
 					</section>
 					<section>
@@ -187,23 +230,6 @@
 							<li>You can <code>pip install</code> additional things</li>
 						</ul>
 					</section>
-				</section>
-				<section>
-					<h2><code>Spec highlighting</code></h2>
-					<pre><code data-trim data-noescape class="spec">
-						$ spack spec \
-							  --fresh zlib
-						Input spec
-						--------------------------------
-						 -   zlib
-
-						Concretized
-						--------------------------------
-						 -   zlib@1.3.1%gcc@13.2.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu23.10-zen2
-						 -       ^gcc-runtime@13.2.0%gcc@13.2.0 build_system=generic arch=linux-ubuntu23.10-zen2
-						[e]      ^glibc@2.38%gcc@13.2.0 build_system=autotools arch=linux-ubuntu23.10-zen2
-						 -       ^gmake@4.4.1%gcc@13.2.0~guile build_system=generic arch=linux-ubuntu23.10-zen2
-					</code></pre>
 				</section>
 
 				<!-- Concretizer -->

@@ -20,6 +20,7 @@
 					<section>
 						<img src="dist/images/logo.svg" />
 						<h1 class="r-fit-text">What's new in Spack?</h1>
+						<p>and what's to come?</p>
 					</section>
 					<section>
 						<h2>What's new</h2>
@@ -46,20 +47,20 @@
 						</code></pre>
 					</section>
 					<section>
-						<h2>What is <code>gcc-runtime</code>?</h2>
+						<h2>What is <code>^gcc-runtime</code>?</h2>
 						<ul>
 							<li>A Spack installed package that copies
 								<ul>
 									<li><code>libstdc++.so.6</code></li>
 									<li><code>libgfortran.so.5</code></li>
 									<li><code>libgcc_s.so.1</code></li>
-									<li>... etc</li>
+									<li>and others</li>
 								</ul>
 							</li>
 						</ul>
 					</section>
 					<section>
-						<h2>What is <code>libc</code></h2>
+						<h2>What is <code>^libc</code></h2>
 						<ul>
 							<li>An external-only package</li>
 							<li>Virtual provided by <code>glibc</code> and <code>musl</code></li>
@@ -88,40 +89,103 @@
 					<section>
 						<h2>Spack 0.22</h2>
 						<p>Compiler is still a node attribute</p>
-						<img src="dist/images/gcc-runtime-now.svg" />
+						<img class="stretch" src="dist/images/gcc-runtime-now.svg" />
 					</section>
 					<section>
 						<h2>Spack 0.22</h2>
 						<p>Compiler mixing support with <code>gcc-runtime</code></p>
-						<img src="dist/images/gcc-runtime-mixing.svg" width="50%" />
+						<img src="dist/images/gcc-runtime-mixing.svg" class="stretch" />
 					</section>
 					<section>
 						<h2>Spack 0.23 🔮</h2>
 						<p>Compiler is an ordinary node itself</p>
-						<img src="dist/images/gcc-runtime-future.svg" />
+						<img src="dist/images/gcc-runtime-future.svg" class="stretch" />
 					</section>
 					<section>
 						<h2>Spack 0.23 🔮</h2>
 						<p>Express dependencies of compilers</p>
-						<p><em><code>clang</code> injects a dependency on <code>libstdc++.so</code></em></p>
-						<p><img src="dist/images/clang-runtime.svg"  width="70%" /></p>
+						<img src="dist/images/clang-runtime.svg"  class="stretch" />
 					</section>
 					<section>
 						<h2>Spack 0.23 🔮</h2>
 						<ul>
 							<li>Packages can <strong>inject</strong> a runtime dependency into dependents</li>
-							<li>Runtimes will provide <strong>languages</strong>:
-								<pre><code class="spec">depends_on("cxx@2023:")</code></pre>
+							<li>Runtimes will provide <strong>languages</strong> (partially in 0.22):
+								<pre><code class="python">depends_on("fortran")</code></pre>
 							</li>
-							<li>Useful for other things than compilers</li>
+							<li>No compiler for data / pure Python packages</li>
+							<li>Runtimes for other things than compilers?</li>
 						</ul>
 					</section>
 					<section>
 						<h2>What is <code>python-venv</code>?</h2>
-						<pre><code data-noescape class="spec"> -   py-click@8.1.7
+						Python's injected runtime
+						<pre><code data-noescape class="spec">$ spack spec py-click
+ -   py-click@8.1.7
  -       ^python@3.11.9
  -           ^ ...
  -       ^python-venv@1.0</code></pre>
+					</section>
+					<section>
+						<h2>Why <code>python-venv</code>?</h2>
+						<ul>
+							<li>The least worst solution™ for <strong>build isolation</strong></li>
+							<li>Spack environment views = Python venvs</li>
+							<li>Support external Python better</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Pip and Spack are different</h3>
+						<ul>
+							<li><code>pip install</code>: all packages in a single venv dir
+							<pre>
+								<code class="bash" data-trim data-noescape>
+									$ ls my_venv/lib/python3.12/site-packages
+									black click isort
+								</code>
+							</pre></li>
+							<li><code>spack install</code>: all packages in a unique dir
+							<pre>
+								<code class="bash" data-trim data-noescape>
+									$ tree spack/opt/spack
+									├── python-3.12.1-eu5igwm
+									│   └── lib/python3.12  # standard library
+									├── py-black-24.3.0-c5yefsp
+									│   └── lib/python3.12/site-packages/black
+									├── py-click-8.1.7-253ikya
+									│   └── lib/python3.12/site-packages/click
+									└── py-isort-5.12.0-yupkr4p
+									    └── lib/python3.12/site-packages/isort
+								</code>
+							</pre></li>
+						</ul>
+					</section>
+					<section>
+						<h3>Pip and Spack are different</h3>
+						<ul>
+							<li>You <code>pip install</code> packages <strong>into a venv</strong></li>
+							<li>You <code>spack install</code> packages <strong>into the store</strong></li>
+							<li class="fragment">A Spack environment can be "installed", but no files are put "in the environment"</li>
+							<li class="fragment">Spack <strong>environment views</strong> make them look similar</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Environment views</h2>
+						<p>Single, flattened dir with tons of symlinks</p>
+						<img src="dist/images/create-view.svg" class="stretch">
+					</section>
+					<section>
+						<h2>environment views</h2>
+						<p style="font-size: 0.7em">with python-venv: <code style="color: rgb(145, 0, 0)">bin/activate</code> and <code style="color: rgb(145, 0, 0)">pyvenv.cfg</code></p>
+						<img src="dist/images/create-view-venv.svg" class="stretch">
+					</section>
+					<section>
+						<h2>What was the point again?</h2>
+						<ul>
+							<li>You can <code>source bin/activate</code></li>
+							<li>Editor support (completion etc)</li>
+							<li>You can <code>pip install</code> additional things</li>
+						</ul>
 					</section>
 				</section>
 				<section>

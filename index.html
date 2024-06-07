@@ -29,6 +29,59 @@
 							<li>Python virtual environments</li>
 						</ul>
 					</section>
+					<section>
+						<h2>Compiler runtime packages</h2>
+						<pre><code data-trim data-noescape>
+							$ spack spec zlib
+							Input spec
+							--------------------------------
+							 -   zlib
+
+							Concretized
+							--------------------------------
+							 -   zlib@1.3.1 %gcc@13.2.0 ...
+							 -       ^gcc-runtime@13.2.0 %gcc@13.2.0 ...
+							[e]      ^glibc@2.38 %gcc@13.2.0 ...
+							 -       ^gmake@4.4.1 %gcc@13.2.0 ...
+						</code></pre>
+					</section>
+					<section>
+						<h2>What is <code>gcc-runtime</code>?</h2>
+						<ul>
+							<li>A Spack installed package that copies
+								<ul>
+									<li><code>libstdc++.so.6</code></li>
+									<li><code>libgfortran.so.5</code></li>
+									<li><code>libgcc_s.so.1</code></li>
+									<li>... etc</li>
+								</ul>
+							</li>
+						</ul>
+					</section>
+					<section>
+						<h2>But why?</h2>
+						<ul>
+							<li>Software does not break if compiler is uninstalled</li>
+							<li>Install from <strong>build cache</strong> without compilers</li>
+							<li>Create small OCI container images</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Spack 0.22</h2>
+						<img src="dist/images/gcc-runtime-now.svg" />
+					</section>
+					<section>
+						<h2>Spack 0.23</h2>
+						<img src="dist/images/gcc-runtime-future.svg" />
+					</section>
+					<section>
+						<h2>Runtimes in Spack 0.23</h2>
+						<ul>
+							<li>Let a dependency <strong>inject</strong> a dependency into its parent</li>
+							<li>With <em>To Be Determined™</em> <code>package.py</code> syntax</li>
+							<li>Useful for other things than compilers</li>
+						</ul>
+					</section>
 				</section>
 				<section>
 					<h2><code>Spec highlighting</code></h2>
@@ -91,7 +144,7 @@
 									begin: KEY_VALUE_PAIR
 								},
 								{
-									className: 'class',
+									className: 'spec-package',
 									begin: PACKAGE
 								},
 								{

@@ -203,12 +203,63 @@
 					<section>
 						... and must solve a SAT problem to get a configuration
 						<div>
-							<img src="dist/images/concretizer.svg" width="40%" height="40%"
-								 style="background: none; border: 0px">
+							<img class="r-stretch" src="dist/images/concretizer.svg" style="background: none; border: 0px">
 						</div>
 					</section>
 					<section>
 						Using the concretizer allows trying different configurations much more easily
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Why is the concretizer so slow?</h2>
+					</section>
+					<section>
+						Dependency resolution is NP-hard!
+					</section>
+					<section>
+						Spack uses <em>clingo</em> and ASP to concretize
+					</section>
+					<section>
+						A crash course in the ASP language
+						<pre><code data-trim data-noescape data-line-numbers="1-3|5-7|9-10|12-16|18-23" class="prolog">
+							% Facts are specific "true" statements
+							node("lammps").
+							variant_set("laamps", "cuda", "false").
+
+							% Rules can derive additional facts
+							path(A, B) :- depends_on(A, B).
+							path(A, C) :- path(A, B), depends_on(B, C).
+
+							% Constraints say what cannot happen
+							:- path(A, B), path(B, A).
+
+							% Choice rules gives the solver freedom to choose
+							% from possible options
+							1 { version(Package, V)
+									: possible_version(Package, V) } 1
+								:- node(Package).
+
+							% Minimization defines the "optimal" solution
+							#minimize{
+								Weight,Package
+								: version_weight(Package, Weight),
+								  node(Package)
+							}.
+						</code></pre>
+						lib/spack/spack/solver/concretize.lp
+					</section>
+					<section>
+						Where is time spent, then?
+						<pre><code data-trim data-noescape data-line-numbers="1|2|3|4|5|6" class="console">
+							$ spack solve --timers hdf5
+							setup          6.676s
+							load           0.979s
+							ground         3.700s
+							solve          7.666s
+							total         19.897s
+							[ ... ]
+						</code></pre>
 					</section>
 				</section>
 			</div>

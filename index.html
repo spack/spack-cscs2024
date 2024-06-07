@@ -91,19 +91,37 @@
 						<img src="dist/images/gcc-runtime-now.svg" />
 					</section>
 					<section>
-						<h2>Spack 0.23</h2>
+						<h2>Spack 0.22</h2>
+						<p>Compiler mixing support with <code>gcc-runtime</code></p>
+						<img src="dist/images/gcc-runtime-mixing.svg" width="50%" />
+					</section>
+					<section>
+						<h2>Spack 0.23 🔮</h2>
 						<p>Compiler is an ordinary node itself</p>
 						<img src="dist/images/gcc-runtime-future.svg" />
 					</section>
 					<section>
-						<h2>Runtimes in Spack 0.23</h2>
+						<h2>Spack 0.23 🔮</h2>
+						<p>Express dependencies of compilers</p>
+						<p><em><code>clang</code> injects a dependency on <code>libstdc++.so</code></em></p>
+						<p><img src="dist/images/clang-runtime.svg"  width="70%" /></p>
+					</section>
+					<section>
+						<h2>Spack 0.23 🔮</h2>
 						<ul>
-							<li>Let a dependency <strong>inject</strong> a dependency into its parent</li>
+							<li>Packages can <strong>inject</strong> a runtime dependency into dependents</li>
 							<li>Runtimes will provide <strong>languages</strong>:
 								<pre><code class="spec">depends_on("cxx@2023:")</code></pre>
 							</li>
 							<li>Useful for other things than compilers</li>
 						</ul>
+					</section>
+					<section>
+						<h2>What is <code>python-venv</code>?</h2>
+						<pre><code data-noescape class="spec"> -   py-click@8.1.7
+ -       ^python@3.11.9
+ -           ^ ...
+ -       ^python-venv@1.0</code></pre>
 					</section>
 				</section>
 				<section>

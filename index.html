@@ -214,10 +214,21 @@
 					</section>
 					<section>
 						<h2>Environment views</h2>
+						<pre>
+							<code class="shell" data-trim data-noescape>
+								$ spack env create --with-view ./view .
+								$ spack -e . add py-black py-isort
+								$ spack -e . install
+								$ ./view/bin/python3 -c 'import black'  # works
+							</code>
+						</pre>
+					</section>
+					<section data-transition="fade-out">
+						<h2>Environment views</h2>
 						<p>Single, flattened dir with tons of symlinks</p>
 						<img src="dist/images/create-view.svg" class="stretch">
 					</section>
-					<section>
+					<section data-transition="fade-in">
 						<h2>environment views</h2>
 						<p style="font-size: 0.7em">with python-venv: <code style="color: rgb(145, 0, 0)">bin/activate</code> and <code style="color: rgb(145, 0, 0)">pyvenv.cfg</code></p>
 						<img src="dist/images/create-view-venv.svg" class="stretch">

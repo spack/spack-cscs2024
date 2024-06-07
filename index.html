@@ -59,26 +59,49 @@
 						</ul>
 					</section>
 					<section>
+						<h2>What is <code>libc</code></h2>
+						<ul>
+							<li>An external-only package</li>
+							<li>Virtual provided by <code>glibc</code> and <code>musl</code></li>
+							<li>Largely replaces the static <code>os</code> tag
+								<ul>
+									<li class="fragment semi-fade-out"><code>os=ubuntu24.04</code></li>
+									<li class="fragment fade-up"><code>^glibc@2.39</code></li>
+								</ul>
+							</li>
+						</ul>
+					</section>
+					<section>
 						<h2>But why?</h2>
 						<ul>
 							<li>Software does not break if compiler is uninstalled</li>
 							<li>Install from <strong>build cache</strong> without compilers</li>
+							<li>Share binaries <strong>across Linux distros</strong></li>
 							<li>Create small OCI container images</li>
+							<li>Be able to express<pre>
+									<code class="spec" data-trim data-noescape>
+									depends_on("glibc@2.31:")
+									</code>
+								</pre></li>
 						</ul>
 					</section>
 					<section>
 						<h2>Spack 0.22</h2>
+						<p>Compiler is still a node attribute</p>
 						<img src="dist/images/gcc-runtime-now.svg" />
 					</section>
 					<section>
 						<h2>Spack 0.23</h2>
+						<p>Compiler is an ordinary node itself</p>
 						<img src="dist/images/gcc-runtime-future.svg" />
 					</section>
 					<section>
 						<h2>Runtimes in Spack 0.23</h2>
 						<ul>
 							<li>Let a dependency <strong>inject</strong> a dependency into its parent</li>
-							<li>With <em>To Be Determined™</em> <code>package.py</code> syntax</li>
+							<li>Runtimes will provide <strong>languages</strong>:
+								<pre><code class="spec">depends_on("cxx@2023:")</code></pre>
+							</li>
 							<li>Useful for other things than compilers</li>
 						</ul>
 					</section>

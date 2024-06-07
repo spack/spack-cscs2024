@@ -348,11 +348,16 @@
 								  node(Package)
 							}.
 						</code></pre>
-						lib/spack/spack/solver/concretize.lp
+					</section>
+					<section>
+						How does clingo solve the ASP problem?
+						<div>
+							<img  src="dist/images/asp-grounding.svg" style="background: none; border: 0px">
+						</div>
 					</section>
 					<section>
 						Where is time spent, then?
-						<pre><code data-trim data-noescape data-line-numbers="1|2|3|4|5|6" class="console">
+						<pre><code data-trim data-noescape data-line-numbers="1|2,8|3,8|4,9|5,9|6,8-9" class="console">
 							$ spack solve --timers hdf5
 							setup          6.676s
 							load           0.979s
@@ -360,7 +365,38 @@
 							solve          7.666s
 							total         19.897s
 							[ ... ]
+							lib/spack/spack/solver/asp.py
+							lib/spack/spack/solver/concretize.lp
 						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>What is an "optimal" solution?</h2>
+					</section>
+					<section>
+						Many minimization criteria with different priorities
+						<pre><code data-trim data-noescape class="prolog">
+							% Choose most recent versions (priority 25)
+							#minimize{
+								Weight@25,node(Package)
+								: version_weight(node(Package), Weight)
+							}.
+
+							% Use default values for variants (priority 20)
+							#minimize{
+								1@20,Package,Variant,Value
+								: variant_default_not_used(Package, Variant, Value)
+							}.
+						</code></pre>
+						A lower penalty on higher priority criteria is preferred
+					</section>
+					<section>
+						<img class="r-stretch" src="dist/images/sums.svg" style="background: none; border: 0px">
+					</section>
+					<section>
+						Check concretization weights
+						<img width="50%" src="dist/images/solve-weights.png" style="background: none; border: 0px">
 					</section>
 				</section>
 			</div>

@@ -509,6 +509,90 @@
 						<img width="50%" src="dist/images/solve-weights.png" style="background: none; border: 0px">
 					</section>
 				</section>
+				<section>
+					<section>	
+						<h2>How are errors modeled?</h2>
+					</section>
+					<section>
+						<code>clingo</code> is not that helpful on unsat problems
+						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
+							node("a").
+
+							attribute(P) :- node(P).
+							:- attribute(P).
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ clingo example.lp 
+							clingo version 5.6.2
+							Reading from example.lp
+							Solving...
+							UNSATISFIABLE
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ spack spec foo
+							==> Error: UNSATISFIABLE
+						</code></pre>
+					</section>
+					<section>
+						Make errors part of a valid solution
+						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
+							node("a").
+
+							attribute(P) :- node(P).
+							error("{P} cannot have an attribute!", P) :- attribute(P).
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ clingo example.lp 
+							clingo version 5.6.2
+							Reading from example.lp
+							Solving...
+							Answer: 1
+							node("a") attribute("a") error("{P} cannot have an attribute!","a")
+							SATISFIABLE
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ spack spec foo
+							==> Error: foo cannot have an attribute!
+						</code></pre>
+					</section>
+					<section>
+						Highest priority optimization is <em>minimize errors</em>
+					</section>
+					<section>						
+						<div>
+							<img src="dist/images/error-flow-chart.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						<pre><code data-trim data-noescape class="console tiny-text">
+							$ spack spec hdf5@1.14 ^cmake@3.16
+							==> Error: concretization failed for the following reasons:
+
+							1. Cannot select a single "version" for package "cmake"
+							2. Cannot satisfy 'cmake@:3.17'
+							3. Cannot satisfy 'cmake@:3.16'
+							4. Cannot satisfy 'cmake@3.18:'
+							5. Cannot satisfy 'cmake@3.16'
+							6. Cannot satisfy 'cmake@3.18:'
+									required because hdf5 depends on cmake@3.18: when @1.13: 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+							7. Cannot satisfy 'cmake@3.16'
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+							8. Cannot satisfy 'cmake@3.18:' and 'cmake@3.16
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5 depends on cmake@3.18: when @1.13: 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+							9. Cannot satisfy 'cmake@3.16' and 'cmake@3.18:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5 depends on cmake@3.18: when @1.13: 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+							10. Cannot satisfy 'cmake@3.12:' and 'cmake@3.16
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5 depends on cmake@3.12: 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+						</code></pre>
+					</section>
+				</section>
 			</div>
 		</div>
 

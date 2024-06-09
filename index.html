@@ -4,6 +4,17 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
+		<style>
+			.small-text {
+				font-size: large;
+				line-height: normal;
+			}
+			.tiny-text {
+				font-size: small;
+				line-height: normal;
+			}
+		</style>
+
 		<title>CSCS Spack Course 2024</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
@@ -367,6 +378,105 @@
 							[ ... ]
 							lib/spack/spack/solver/asp.py
 							lib/spack/spack/solver/concretize.lp
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How does reuse work?</h2>
+					</section>
+					<section>
+						Traditional functional package managers 						
+						<div>
+							<img class="r-stretch" src="dist/images/hash-cache.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						This is what <code>--fresh</code> does in Spack
+					</section>
+					<section>
+						Spack can also actively try to reuse
+						<pre><code data-trim data-noescape class="yaml">
+							concretizer:
+								# Whether to consider installed packages or packages 
+								# from buildcaches when concretizing specs. If `true`, 
+								# we'll try to use as many installs/binaries as possible,
+								# rather than building. If `false`, we'll always give you 
+								# a fresh concretization. If `dependencies`, we'll only 
+								# reuse dependencies but give you a fresh concretization 
+								# for your root specs.
+								reuse: true
+						</code></pre>
+					</section>
+					<section>
+						<pre><code data-trim data-noescape class="small-text console">
+							$ spack solve --show=asp hdf5
+							[ ... ]
+							installed_hash("diffutils","cguhjk").
+							imposed_constraint("cguhjk","node","diffutils").
+							imposed_constraint("cguhjk","version","diffutils","3.10").
+							imposed_constraint("cguhjk","node_platform","diffutils","linux").
+							imposed_constraint("cguhjk","node_os","diffutils","ubuntu20.04").
+							imposed_constraint("cguhjk","node_target","diffutils","icelake").
+							imposed_constraint("cguhjk","variant_value","diffutils","build_system","autotools").
+							imposed_constraint("cguhjk","node_compiler","diffutils","gcc").
+							imposed_constraint("cguhjk","node_compiler_version","diffutils","gcc","9.4.0").
+							imposed_constraint("cguhjk","package_hash","diffutils","kbm...").
+							imposed_constraint("cguhjk","hash","diffutils","cguhjk").
+							imposed_constraint("cguhjk","compatible_libc","diffutils","glibc","2.31").
+							imposed_constraint("cguhjk","depends_on","diffutils","libiconv","link").
+							imposed_constraint("cguhjk","virtual_on_edge","diffutils","libiconv","iconv").
+							imposed_constraint("cguhjk","virtual_node","iconv").
+							imposed_constraint("cguhjk","hash","libiconv","iel...").
+						</code></pre>
+					</section>
+					<section>
+						Spack v0.22 allows a <em>fine-tuned</em> selection
+					</section>
+					<section>
+						Reuse only specs compiled with GCC
+						<pre><code data-trim data-noescape class="yaml">
+							concretizer:
+								reuse:
+									roots: true
+									include:
+									- "%gcc"
+						</code></pre>
+					</section>
+					<section>
+						Use OpenMPI from externals
+						<pre><code data-trim data-noescape class="yaml">
+							concretizer:
+								reuse:
+									roots: true
+									from:
+									# OpenMPI should not be reused 
+									# from store or buildcache...
+									- type: local
+									  exclude: ["openmpi"]
+									- type: buildcache
+									  exclude: ["openmpi"]
+									# ...and it must be the only external used
+									- type: external
+									  include: ["openmpi"]
+						</code></pre>
+					</section>
+					<section>
+						https://cache.spack.io/
+						<div>
+							<img height="40%" src="dist/images/build-cache.png" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						<pre><code data-trim data-noescape class="console tiny-text">
+							$ spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
+							
+							$ spack buildcache keys --install --trust
+							==> Fetching https://binaries.spack.io/develop/developer-tools-manylinux2014/build_cache/_pgp/2C8DD3224EF3573A42BD221FA8E0CA3C1C2ADA2F.pub
+							gpg: key A8E0CA3C1C2ADA2F: 5 signatures not checked due to missing keys
+							gpg: key A8E0CA3C1C2ADA2F: "Spack Project Official Binaries <maintainers@spack.io>" not changed
+							gpg: Total number processed: 1
+							gpg:              unchanged: 1
 						</code></pre>
 					</section>
 				</section>

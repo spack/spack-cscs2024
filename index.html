@@ -23,6 +23,7 @@
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+		<link rel="stylesheet" href="plugin/asciinema/asciinema-player.css">
 	</head>
 	<body>
 		<div class="reveal">
@@ -268,6 +269,195 @@
 							<li>Editor support (completion etc)</li>
 							<li><code>pip list</code> and <code>pip install</code> interop</li>
 						</ul>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Hands-on #1</h2>
+						<ul>
+							<li>Learn about build caches</li>
+							<li>Create container images</li>
+							<li>GitHub Actions and Packages</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Follow along</h2>
+						<ul>
+							<li><a href="https://spack-tutorial.rtfd.io" target="_blank">https://spack-tutorial.rtfd.io</a></li>
+							<li>Click <strong>Binary Caches Tutorial</strong></li>
+						</ul>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/1.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/2.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<h2>Setup GitHub API token</h2>
+						<a href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>
+					</section>
+					<section data-background="dist/images/github-token.png"></section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/3.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<h2>Make GitHub Package public</h2>
+						<a href="https://github.com/users/haampie/packages/container/cscs-tutorial/settings">https://github.com/users/haampie/packages/container/cscs-tutorial/settings</a>
+						<img src="dist/images/github-public.png" class="stretch" />
+					</section>
+					<section>
+						<h2>Try out the build cache</h2>
+						<ul>
+							<li><code>spack install</code> should use it</li>
+							<li>No GitHub token should be required if public</li>
+						</ul>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/4.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<h2>Reuse concretization</h2>
+						<ul>
+							<li>The concretizer needs a build cache index</li>
+							<li>It's a "remote" database</li>
+							<li>Concretizer warns if not available</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Reuse concretization</h2>
+						<ul>
+							<li>Create index with <pre><code class="shell">$ spack buildcache update-index &lt;name&gt;</code></pre></li>
+							<li>Slow reduction operation</li>
+							<li>Fetch all individual specs, upload single database</li>
+						</ul>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/5.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<h2>Runnable container images</h2>
+						<ul>
+							<li>We can <code>spack install</code> from the cache</li>
+							<li>We can't yet <code>docker run</code> them</li>
+							<li class="fragment">Remember external <code>^glibc</code>?</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Add a base image of choice</h2>
+						<pre><code class="text" data-trim data-noescape>
+						$ spack -e . buildcache push \
+							--force \
+							--base-image ubuntu:24.04
+							# --base-image fedora:latest
+						</code></pre>
+						<ul>
+							<li>Works if base image glibc is &ge; ^glibc in Spack's DAG</li>
+							<li>Gives you a basic shell</li>
+							<li>And yet another system package manager</li>
+						</ul>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/6.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/7.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<h2>What's an OCI registry again?</h2>
+						<div class="r-stack">
+							<ul class="fragment current-visible">
+								<li>Bunch of <strong>blobs</strong> and <strong>manifests</strong></li>
+								<li><strong>Blobs</strong> are tarballs named by sha256</li>
+								<li><strong>Manifests</strong> are tags &amp; list <strong>blobs</strong> as layers</li>
+								<li>One blob for every Spack package prefix</li>
+								<li>One manifest for every Spack package</li>
+								<li>... with many layers: all runtime deps included</li>
+							</ul>
+							<img src="dist/images/oci-structure.svg" class="fragment" />
+						</div>
+					</section>
+					<section>
+						<h2>Tag an environment</h2>
+						<ul>
+							<li>By default: single root per container image</li>
+							<li>How can we compose container images?</li>
+							<li>Typically non-trivial: try and merge official CUDA and MKL container images</li>
+							<li class="fragment">... trivial in Spack due to <strong>single prefix per package</strong></li>
+						</ul>
+					</section>
+					<section>
+						<h2>Tag an environment</h2>
+						Works best with <code>unify:true</code>
+						<pre><code class="shell" data-trim data-noescape>
+							$ spack -e . add julia vim
+							$ spack -e . install
+							$ spack -e . buildcache push \
+							    --tag julia-and-vim \
+							    --base-image ubuntu:24.04 \
+							    ghcr
+						</code></pre>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/8.cast"
+							} 
+							-->
+						</div>
+					</section>
+					<section>
+						<div class="asciicast stretch">
+							<!--
+							{
+							"URL": "dist/recordings/9.cast"
+							} 
+							-->
+						</div>
 					</section>
 				</section>
 
@@ -634,6 +824,8 @@
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
+		<script src="plugin/anything/plugin.js"></script>
+		<script src="plugin/asciinema/asciinema-player.min.js"></script>
 		<script>
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
@@ -699,7 +891,16 @@
 					})
 				},
 				hash: true,
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ],
+				anything: [
+					{
+						className: "asciicast",
+						defaults: { theme: 'monokai', fontSize: '15px' },
+						initialize: (function(container, options) {
+							AsciinemaPlayer.create(options.URL, container, options);
+						})
+					},
+				],
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealAnything ],
 			});
 		</script>
 	</body>

@@ -665,12 +665,12 @@
 						Spack can also actively try to reuse
 						<pre><code data-trim data-noescape class="yaml">
 							concretizer:
-								# Whether to consider installed packages or packages 
-								# from buildcaches when concretizing specs. If `true`, 
+								# Whether to consider installed packages or packages
+								# from buildcaches when concretizing specs. If `true`,
 								# we'll try to use as many installs/binaries as possible,
-								# rather than building. If `false`, we'll always give you 
-								# a fresh concretization. If `dependencies`, we'll only 
-								# reuse dependencies but give you a fresh concretization 
+								# rather than building. If `false`, we'll always give you
+								# a fresh concretization. If `dependencies`, we'll only
+								# reuse dependencies but give you a fresh concretization
 								# for your root specs.
 								reuse: true
 						</code></pre>
@@ -718,7 +718,7 @@
 								reuse:
 									roots: true
 									from:
-									# OpenMPI should not be reused 
+									# OpenMPI should not be reused
 									# from store or buildcache...
 									- type: local
 									  exclude: ["openmpi"]
@@ -740,7 +740,7 @@
 						<pre><code data-trim data-noescape class="bash">
 							# Check that using --fresh doesn't emit hash facts
 							spack solve --fresh --show=asp ... | less
-							
+
 							# Add a mirror, retry
 							spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
 							spack buildcache keys --install --trust
@@ -756,7 +756,7 @@
 					<section>
 						<h2>What is an optimal solution?</h2>
 					</section>
-					<section>						
+					<section>
 						Many optimization criteria for an optimal spec
 						<ul class="small-text">
 							<li>Prefer newer versions</li>
@@ -779,7 +779,7 @@
 								1@20,Package,Variant,Value
 								: variant_default_not_used(Package, Variant, Value)
 							}.
-						</code></pre>						
+						</code></pre>
 					</section>
 					<section>
 						<img class="r-stretch" src="dist/images/sums.svg" style="background: none; border: 0px">
@@ -826,7 +826,7 @@
 					</section>
 				</section>
 				<section>
-					<section>	
+					<section>
 						<h2>How are errors modeled?</h2>
 					</section>
 					<section>
@@ -838,7 +838,7 @@
 							:- attribute(P).
 						</code></pre>
 						<pre><code data-trim data-noescape class="console">
-							$ clingo example.lp 
+							$ clingo example.lp
 							clingo version 5.6.2
 							Reading from example.lp
 							Solving...
@@ -858,7 +858,7 @@
 							error("{P} cannot have an attribute!", P) :- attribute(P).
 						</code></pre>
 						<pre><code data-trim data-noescape class="console">
-							$ clingo example.lp 
+							$ clingo example.lp
 							clingo version 5.6.2
 							Reading from example.lp
 							Solving...
@@ -874,7 +874,7 @@
 					<section>
 						Highest priority optimization is <em>minimize errors</em>
 					</section>
-					<section>						
+					<section>
 						<div>
 							<img src="dist/images/error-flow-chart.svg" style="background: none; border: 0px">
 						</div>
@@ -890,22 +890,22 @@
 							4. Cannot satisfy 'cmake@3.18:'
 							5. Cannot satisfy 'cmake@3.16'
 							6. Cannot satisfy 'cmake@3.18:'
-									required because hdf5 depends on cmake@3.18: when @1.13: 
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 							7. Cannot satisfy 'cmake@3.16'
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 							8. Cannot satisfy 'cmake@3.18:' and 'cmake@3.16
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
-									required because hdf5 depends on cmake@3.18: when @1.13: 
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 							9. Cannot satisfy 'cmake@3.16' and 'cmake@3.18:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
-									required because hdf5 depends on cmake@3.18: when @1.13: 
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 							10. Cannot satisfy 'cmake@3.12:' and 'cmake@3.16
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
-									required because hdf5 depends on cmake@3.12: 
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly 
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.12:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 						</code></pre>
 					</section>
 				</section>
@@ -937,14 +937,14 @@
 						<pre><code data-trim data-noescape class="YAML">
 						packages:
 							all:
-								require: 
+								require:
 								- "+shared +cuda"
 						</code></pre>
 						vs.
 						<pre><code data-trim data-noescape class="YAML">
 						packages:
 							all:
-								require: 
+								require:
 								- "+shared"
 								- "+cuda"
 						</code></pre>
@@ -967,10 +967,10 @@
 						<pre><code data-trim data-noescape class="YAML">
 							packages:
 								mpi:
-									require: 
+									require:
 									- 'mvapich2 %gcc'
 								mvapich2:
-									require: 
+									require:
 									- '~cuda'
 						</code></pre>
 					</section>
@@ -983,14 +983,6 @@
 								- 'build_type=Release'
 								- '+cuda'
 					</code></pre>
-					==
-					<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								require:
-								- any_of: ['build_type=Release', '@:']
-								- any_of: ['+cuda', '@:']
-					</code></pre>
 					</section>
 					<section>
 						<h2>Hands-on</h2>
@@ -998,11 +990,75 @@
 							# Add a requirement to configuration,
 							# try to violate it, check the error message
 
-							# Do the same with a strong preference, observe 
+							# Do the same with a strong preference, observe
 							# spack solve weights
 
-							# Enforce virtuals in an environment using 
+							# Enforce virtuals in an environment using
 							# requirements
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How can I constrain a virtual provider in a recipe?</h2>
+					</section>
+					<section>
+						Refer to a provider in a condition
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# If using openmpi as a provider, needs
+								# thread multiple support
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^[virtuals=mpi] openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						This is bad, since it's self referential
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# openmpi can be used as a "normal" dependency
+								# clingo can choose to add it or not
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						Conditionally constrain a normal package
+						<pre><code class="python" data-trim data-noescape>
+							class GribUtil(CMakePackage)::
+
+								depends_on("ip")
+
+								# If ip is at version 4.1 or later, then also
+								# require precision=d
+								requires("^ip precision=d", when="^ip@4.1:")
+						</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Make mpich the preferred provider
+							spack config add packages:all:providers:mpi:[mpich]
+
+							# Try to concretize hdf5-vol-async with different mpis
+							spack spec hdf5-vol-async ^mpich
+							spack spec hdf5-vol-async ^openmpi
+
+							# Edit hdf5-vol-async to use the wrong idiom
+							# and repeat
+
+							# https://dreampuf.github.io/GraphvizOnline
+							spack graph -d --color hdf5-vol-async ^openmpi
 						</code></pre>
 					</section>
 				</section>

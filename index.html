@@ -618,19 +618,23 @@
 							lib/spack/spack/solver/concretize.lp
 						</code></pre>
 					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code class="bash" data-trim>
+							# Try to time different concretizations
+							spack solve --timers ...
+						</code></pre>
+					</section>
 				</section>
 				<section>
 					<section>
 						<h2>How does reuse work?</h2>
 					</section>
 					<section>
-						Traditional functional package managers 						
+						Concretization without reuse: <code>--fresh</code>
 						<div>
 							<img class="r-stretch" src="dist/images/hash-cache.svg" style="background: none; border: 0px">
 						</div>
-					</section>
-					<section>
-						This is what <code>--fresh</code> does in Spack
 					</section>
 					<section>
 						Spack can also actively try to reuse
@@ -647,9 +651,10 @@
 						</code></pre>
 					</section>
 					<section>
-						<pre><code data-trim data-noescape class="small-text console">
-							$ spack solve --show=asp hdf5
-							[ ... ]
+						<pre><code data-trim data-noescape class="console">
+							spack solve --show=asp hdf5
+						</code></pre>
+						<pre><code data-trim data-noescape class="small-text prolog">
 							installed_hash("diffutils","cguhjk").
 							imposed_constraint("cguhjk","node","diffutils").
 							imposed_constraint("cguhjk","version","diffutils","3.10").
@@ -706,24 +711,37 @@
 						</div>
 					</section>
 					<section>
-						<pre><code data-trim data-noescape class="console tiny-text">
-							$ spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Check that using --fresh doesn't emit hash facts
+							spack solve --fresh --show=asp ... | less
 							
-							$ spack buildcache keys --install --trust
-							==> Fetching https://binaries.spack.io/develop/developer-tools-manylinux2014/build_cache/_pgp/2C8DD3224EF3573A42BD221FA8E0CA3C1C2ADA2F.pub
-							gpg: key A8E0CA3C1C2ADA2F: 5 signatures not checked due to missing keys
-							gpg: key A8E0CA3C1C2ADA2F: "Spack Project Official Binaries <maintainers@spack.io>" not changed
-							gpg: Total number processed: 1
-							gpg:              unchanged: 1
+							# Add a mirror, retry
+							spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
+							spack buildcache keys --install --trust
+							spack solve --reuse --show=asp ... | less
+
+							# Now, use a finer selection from configuration
+							# https://spack.readthedocs.io/en/latest/build_settings.html#reuse-already-installed-packages
+							# Check how reused specs are added according to your filters
 						</code></pre>
 					</section>
 				</section>
 				<section>
 					<section>
-						<h2>What is an "optimal" solution?</h2>
+						<h2>What is an optimal solution?</h2>
+					</section>
+					<section>						
+						Many optimization criteria for an optimal spec
+						<ul class="small-text">
+							<li>Prefer newer versions</li>
+							<li>Prefer default values for variants</li>
+							<li>Prefer to use the same compiler across a DAG</li>
+							<li>...</li>
+						</ul>
 					</section>
 					<section>
-						Many minimization criteria with different priorities
+						A lower penalty on higher priority criteria is preferred
 						<pre><code data-trim data-noescape class="prolog">
 							% Choose most recent versions (priority 25)
 							#minimize{
@@ -736,15 +754,50 @@
 								1@20,Package,Variant,Value
 								: variant_default_not_used(Package, Variant, Value)
 							}.
-						</code></pre>
-						A lower penalty on higher priority criteria is preferred
+						</code></pre>						
 					</section>
 					<section>
 						<img class="r-stretch" src="dist/images/sums.svg" style="background: none; border: 0px">
 					</section>
 					<section>
-						Check concretization weights
-						<img width="50%" src="dist/images/solve-weights.png" style="background: none; border: 0px">
+
+						<code data-trim data-noescape class="console">
+							spack solve hdf5
+						</code>
+						<pre><code data-trim data-noescape class="console small-text">
+							Priority  Criterion                                            Installed  ToBuild
+							1         requirement weight                                           -        0
+							2         number of packages to build (vs. reuse)                      -        5
+							3         number of nodes from the same package                        -        0
+							4         deprecated versions used                                     0        0
+							5         version badness (roots)                                      0        0
+							6         number of non-default variants (roots)                       0        0
+							7         preferred providers for roots                                0        0
+							8         default values of variants not being used (roots)            0        0
+							9         number of non-default variants (non-roots)                  11        0
+							10        preferred providers (non-roots)                              0        0
+							11        compiler mismatches that are not from CLI                   23        0
+							12        compiler mismatches that are not from CLI                    0        0
+							13        non-preferred OS's                                          33        0
+							14        version badness (non roots)                                329        0
+							15        default values of variants not being used (non-roots)        2        0
+							16        non-preferred compilers                                     64        0
+							17        target mismatches                                            8        0
+							18        non-preferred targets                                      288        0
+							19        compiler mismatches (runtimes)                               4        0
+							20        version badness (runtimes)                                   0        0
+							21        non-preferred targets (runtimes)                             9        0
+							22        edge wiring                                                588        0
+						</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code class="bash" data-trim>
+							# Check how weights are changing depending on the spec
+							# and the overall configuration.
+							spack solve --reuse ...
+							spack solve --fresh ...
+						</code></pre>
 					</section>
 				</section>
 				<section>

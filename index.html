@@ -929,6 +929,9 @@
 						return {
 							case_insensitive: true,
 							contains: [
+								hljs.COMMENT(
+									'#.+$',
+								),
 								{
 									className: "spec-command-line",
 									begin: '^\\s*\\$',

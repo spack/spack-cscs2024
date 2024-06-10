@@ -76,16 +76,16 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
   color: #a347ba;
 }
 .hljs-spec-variant {
-  color: #2a7bde;
+  color: #7bb7ff;
 }
 .hljs-spec-compiler, .hljs-spec-status-installed {
-  color: #26a269;
+  color: #31ffa0;
 }
 .hljs-spec-version {
-  color: #2aa1b3;
+  color: #61eaff;
 }
 .hljs-spec-arch {
-  color: #a347ba;
+  color: #de5bff;
 }
 .hljs-spec-command-line {
   color: #fff;

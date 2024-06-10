@@ -85,6 +85,568 @@
 						</code></pre>
 					</section>
 				</section>
+				<!-- Concretizer -->
+				<section>
+					<section>
+						<h2>Why is the concretizer necessary?</h2>
+					</section>
+					<section>
+						Installations can be finely tuned with the <em>spec syntax</em>
+						<pre><code data-trim data-noescape class="spec">
+						# Specify a version range with `@`
+						hdf5@1.10.1
+
+						# Specify a compiler toolchain with `%`
+						hdf5@1.10.1 %gcc@4.7.3
+
+						# Activate or deactivate boolean variants
+						hdf5@1.10.1 +szip ~fortran
+
+						# Set multi-valued variants, or reserved keywords
+						hdf5@1.10.1 build_type=Release target=x86_64_v4
+					</code></pre>
+					</section>
+					<section>
+						Each recipe can build a software in multiple ways
+						<pre><code class="python" data-trim>
+							class Hdf5(CMakePackage):
+								"""HDF5 is a data model, library, ... """
+
+								homepage = "https://portal.hdfgroup.org"
+								url      = "https://.../hdf5-1.14.3.tar.gz"
+
+								version("1.14.2", sha256="4b4b4453251")
+								version("1.12.3", sha256="49d88f4494a")
+
+								variant("shared", default=True, description="...")
+								variant("mpi",    default=True, description="...")
+
+								depends_on("mpi", when="+mpi")
+						</code></pre>
+					</section>
+					<section>
+						That's not alike other functional package managers...
+						<pre><code class="scheme" data-trim data-noescape>
+							(define-public hello
+							(package
+								(name "hello")
+								(version "2.10")
+								(source
+								(origin
+									(method url-fetch)
+									(uri (string-append "hello-" version ".tar.gz"))
+									(sha256 (base32 "0ssi1..."))))
+									(build-system gnu-build-system)
+									(synopsis "Hello, GNU world: An example GNU package")
+									(description "GNU Hello prints ...")
+									(home-page "https://www.gnu.org/software/hello/")
+									(license gpl3+)))
+						</code></pre>
+					</section>
+					<section>
+						... and must solve a SAT problem to get a configuration
+						<div>
+							<img class="r-stretch" src="dist/images/concretizer.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						Using the concretizer allows trying different configurations much more easily
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code class="bash" data-trim>
+							# Try different variants, see how dependencies change
+							spack spec hfd5 ...
+
+							# Use spack graph to get more insight on DAG structure
+							# To visualize: https://dreampuf.github.io/GraphvizOnline/
+							spack graph -d --color ...
+
+							# Use a temporary environment to avoid reconcretizing
+							spack env activate --temp
+							spack add ...
+							spack concretize
+							...
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Why is the concretizer so slow?</h2>
+					</section>
+					<section>
+						Dependency resolution is NP-hard!
+					</section>
+					<section>
+						Spack uses <em>clingo</em> and ASP to concretize
+					</section>
+					<section>
+						A crash course in the ASP language
+						<pre><code data-trim data-noescape data-line-numbers="1-3|5-7|9-10|12-16|18-23" class="prolog">
+							% Facts are specific "true" statements
+							node("lammps").
+							variant_set("laamps", "cuda", "false").
+
+							% Rules can derive additional facts
+							path(A, B) :- depends_on(A, B).
+							path(A, C) :- path(A, B), depends_on(B, C).
+
+							% Constraints say what cannot happen
+							:- path(A, B), path(B, A).
+
+							% Choice rules gives the solver freedom to choose
+							% from possible options
+							1 { version(Package, V)
+									: possible_version(Package, V) } 1
+								:- node(Package).
+
+							% Minimization defines the "optimal" solution
+							#minimize{
+								Weight,Package
+								: version_weight(Package, Weight),
+								node(Package)
+							}.
+						</code></pre>
+					</section>
+					<section>
+						How does clingo solve the ASP problem?
+						<div>
+							<img  src="dist/images/asp-grounding.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						Where is time spent, then?
+						<pre><code data-trim data-noescape data-line-numbers="1|2,8|3,8|4,9|5,9|6,8-9" class="console">
+							$ spack solve --timers hdf5
+							setup          6.676s
+							load           0.979s
+							ground         3.700s
+							solve          7.666s
+							total         19.897s
+							[ ... ]
+							lib/spack/spack/solver/asp.py
+							lib/spack/spack/solver/concretize.lp
+						</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code class="bash" data-trim>
+							# Try to time different concretizations
+							spack solve --timers ...
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How does reuse work?</h2>
+					</section>
+					<section>
+						Concretization without reuse: <code>--fresh</code>
+						<div>
+							<img class="r-stretch" src="dist/images/hash-cache.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						Spack can also actively try to reuse
+						<pre><code data-trim data-noescape class="yaml">
+							concretizer:
+								# Whether to consider installed packages or packages
+								# from buildcaches when concretizing specs. If `true`,
+								# we'll try to use as many installs/binaries as possible,
+								# rather than building. If `false`, we'll always give you
+								# a fresh concretization. If `dependencies`, we'll only
+								# reuse dependencies but give you a fresh concretization
+								# for your root specs.
+								reuse: true
+						</code></pre>
+					</section>
+					<section>
+						<pre><code data-trim data-noescape class="console">
+							spack solve --show=asp hdf5
+						</code></pre>
+						<pre><code data-trim data-noescape class="small-text prolog">
+							installed_hash("diffutils","cguhjk").
+							imposed_constraint("cguhjk","node","diffutils").
+							imposed_constraint("cguhjk","version","diffutils","3.10").
+							imposed_constraint("cguhjk","node_platform","diffutils","linux").
+							imposed_constraint("cguhjk","node_os","diffutils","ubuntu20.04").
+							imposed_constraint("cguhjk","node_target","diffutils","icelake").
+							imposed_constraint("cguhjk","variant_value","diffutils","build_system","autotools").
+							imposed_constraint("cguhjk","node_compiler","diffutils","gcc").
+							imposed_constraint("cguhjk","node_compiler_version","diffutils","gcc","9.4.0").
+							imposed_constraint("cguhjk","package_hash","diffutils","kbm...").
+							imposed_constraint("cguhjk","hash","diffutils","cguhjk").
+							imposed_constraint("cguhjk","compatible_libc","diffutils","glibc","2.31").
+							imposed_constraint("cguhjk","depends_on","diffutils","libiconv","link").
+							imposed_constraint("cguhjk","virtual_on_edge","diffutils","libiconv","iconv").
+							imposed_constraint("cguhjk","virtual_node","iconv").
+							imposed_constraint("cguhjk","hash","libiconv","iel...").
+						</code></pre>
+					</section>
+					<section>
+						Spack v0.22 allows a <em>fine-tuned</em> selection
+					</section>
+					<section>
+						Reuse only specs compiled with GCC
+						<pre><code data-trim data-noescape class="yaml">
+							concretizer:
+								reuse:
+									roots: true
+									include:
+									- "%gcc"
+						</code></pre>
+					</section>
+					<section>
+						Use OpenMPI from externals
+						<pre><code data-trim data-noescape class="yaml">
+							concretizer:
+								reuse:
+									roots: true
+									from:
+									# OpenMPI should not be reused
+									# from store or buildcache...
+									- type: local
+									exclude: ["openmpi"]
+									- type: buildcache
+									exclude: ["openmpi"]
+									# ...and it must be the only external used
+									- type: external
+									include: ["openmpi"]
+						</code></pre>
+					</section>
+					<section>
+						https://cache.spack.io/
+						<div>
+							<img height="40%" src="dist/images/build-cache.png" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Check that using --fresh doesn't emit hash facts
+							spack solve --fresh --show=asp ... | less
+
+							# Add a mirror, retry
+							spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
+							spack buildcache keys --install --trust
+							spack solve --reuse --show=asp ... | less
+
+							# Now, use a finer selection from configuration
+							# https://spack.readthedocs.io/en/latest/build_settings.html#reuse-already-installed-packages
+							# Check how reused specs are added according to your filters
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>What is an optimal solution?</h2>
+					</section>
+					<section>
+						Many optimization criteria for an optimal spec
+						<ul class="small-text">
+							<li>Prefer newer versions</li>
+							<li>Prefer default values for variants</li>
+							<li>Prefer to use the same compiler across a DAG</li>
+							<li>...</li>
+						</ul>
+					</section>
+					<section>
+						A lower penalty on higher priority criteria is preferred
+						<pre><code data-trim data-noescape class="prolog">
+							% Choose most recent versions (priority 25)
+							#minimize{
+								Weight@25,node(Package)
+								: version_weight(node(Package), Weight)
+							}.
+
+							% Use default values for variants (priority 20)
+							#minimize{
+								1@20,Package,Variant,Value
+								: variant_default_not_used(Package, Variant, Value)
+							}.
+						</code></pre>
+					</section>
+					<section>
+						<img class="r-stretch" src="dist/images/sums.svg" style="background: none; border: 0px">
+					</section>
+					<section>
+
+						<code data-trim data-noescape class="console">
+							spack solve hdf5
+						</code>
+						<pre><code data-trim data-noescape class="console small-text">
+							Priority  Criterion                                            Installed  ToBuild
+							1         requirement weight                                           -        0
+							2         number of packages to build (vs. reuse)                      -        5
+							3         number of nodes from the same package                        -        0
+							4         deprecated versions used                                     0        0
+							5         version badness (roots)                                      0        0
+							6         number of non-default variants (roots)                       0        0
+							7         preferred providers for roots                                0        0
+							8         default values of variants not being used (roots)            0        0
+							9         number of non-default variants (non-roots)                  11        0
+							10        preferred providers (non-roots)                              0        0
+							11        compiler mismatches that are not from CLI                   23        0
+							12        compiler mismatches that are not from CLI                    0        0
+							13        non-preferred OS's                                          33        0
+							14        version badness (non roots)                                329        0
+							15        default values of variants not being used (non-roots)        2        0
+							16        non-preferred compilers                                     64        0
+							17        target mismatches                                            8        0
+							18        non-preferred targets                                      288        0
+							19        compiler mismatches (runtimes)                               4        0
+							20        version badness (runtimes)                                   0        0
+							21        non-preferred targets (runtimes)                             9        0
+							22        edge wiring                                                588        0
+						</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code class="bash" data-trim>
+							# Check how weights are changing depending on the spec
+							# and the overall configuration.
+							spack solve --reuse ...
+							spack solve --fresh ...
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How are errors modeled?</h2>
+					</section>
+					<section>
+						<code>clingo</code> is not that helpful on unsat problems
+						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
+							node("a").
+
+							attribute(P) :- node(P).
+							:- attribute(P).
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ clingo example.lp
+							clingo version 5.6.2
+							Reading from example.lp
+							Solving...
+							UNSATISFIABLE
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ spack spec foo
+							==> Error: UNSATISFIABLE
+						</code></pre>
+					</section>
+					<section>
+						Make errors part of a valid solution
+						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
+							node("a").
+
+							attribute(P) :- node(P).
+							error("{P} cannot have an attribute!", P) :- attribute(P).
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ clingo example.lp
+							clingo version 5.6.2
+							Reading from example.lp
+							Solving...
+							Answer: 1
+							node("a") attribute("a") error("{P} cannot have an attribute!","a")
+							SATISFIABLE
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ spack spec foo
+							==> Error: foo cannot have an attribute!
+						</code></pre>
+					</section>
+					<section>
+						Highest priority optimization is <em>minimize errors</em>
+					</section>
+					<section>
+						<div>
+							<img src="dist/images/error-flow-chart.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						<pre><code data-trim data-noescape class="console tiny-text">
+							$ spack spec hdf5@1.14 ^cmake@3.16
+							==> Error: concretization failed for the following reasons:
+
+							1. Cannot select a single "version" for package "cmake"
+							2. Cannot satisfy 'cmake@:3.17'
+							3. Cannot satisfy 'cmake@:3.16'
+							4. Cannot satisfy 'cmake@3.18:'
+							5. Cannot satisfy 'cmake@3.16'
+							6. Cannot satisfy 'cmake@3.18:'
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							7. Cannot satisfy 'cmake@3.16'
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							8. Cannot satisfy 'cmake@3.18:' and 'cmake@3.16
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							9. Cannot satisfy 'cmake@3.16' and 'cmake@3.18:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							10. Cannot satisfy 'cmake@3.12:' and 'cmake@3.16
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.12:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>What are requirements and strong preferences?</h2>
+					</section>
+					<section>
+						Enforce constraints from <code>package.py</code> or configuration
+					</section>
+					<section>
+						In a recipe:
+						<pre><code data-trim data-noescape class="python">
+						class Hdf5(CMakePackage):
+
+							requires("%gcc", msg="This package must be built with GCC")
+						</code></pre>
+						From configuration:
+						<pre><code data-trim data-noescape class="YAML">
+						packages:
+							hdf5:
+								require:
+								- spec: "%gcc"
+								message: "This package must be built with GCC"
+						</code></pre>
+					</section>
+					<section>
+						Setting default requirements
+						<pre><code data-trim data-noescape class="YAML">
+						packages:
+							all:
+								require:
+								- "+shared +cuda"
+						</code></pre>
+						vs.
+						<pre><code data-trim data-noescape class="YAML">
+						packages:
+							all:
+								require:
+								- "+shared"
+								- "+cuda"
+						</code></pre>
+					</section>
+					<section>
+						Package specific requirements override defaults
+						<pre><code data-trim data-noescape class="YAML">
+							packages:
+								all:
+									require:
+									- 'build_type=Debug'
+									- '%clang'
+								cmake:
+									require:
+									- '%gcc'
+						</code></pre>
+					</section>
+					<section>
+						Requirements on virtual packages
+						<pre><code data-trim data-noescape class="YAML">
+							packages:
+								mpi:
+									require:
+									- 'mvapich2 %gcc'
+								mvapich2:
+									require:
+									- '~cuda'
+						</code></pre>
+					</section>
+					<section>
+					Strong preferences
+					<pre><code data-trim data-noescape class="YAML">
+						packages:
+							all:
+								prefer:
+								- 'build_type=Release'
+								- '+cuda'
+					</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Add a requirement to configuration,
+							# try to violate it, check the error message
+
+							# Do the same with a strong preference, observe
+							# spack solve weights
+
+							# Enforce virtuals in an environment using
+							# requirements
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How can I constrain a virtual provider in a recipe?</h2>
+					</section>
+					<section>
+						Refer to a provider in a condition
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# If using openmpi as a provider, needs
+								# thread multiple support
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^[virtuals=mpi] openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						This is bad, since it's self referential
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# openmpi can be used as a "normal" dependency
+								# clingo can choose to add it or not
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						Conditionally constrain a normal package
+						<pre><code class="python" data-trim data-noescape>
+							class GribUtil(CMakePackage)::
+
+								depends_on("ip")
+
+								# If ip is at version 4.1 or later, then also
+								# require precision=d
+								requires("^ip precision=d", when="^ip@4.1:")
+						</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Make mpich the preferred provider
+							spack config add packages:all:providers:mpi:[mpich]
+
+							# Try to concretize hdf5-vol-async with different mpis
+							spack spec hdf5-vol-async ^mpich
+							spack spec hdf5-vol-async ^openmpi
+
+							# Edit hdf5-vol-async to use the wrong idiom
+							# and repeat
+
+							# https://dreampuf.github.io/GraphvizOnline
+							spack graph -d --color hdf5-vol-async ^openmpi
+						</code></pre>
+					</section>
+				</section>
 				<section>
 					<section>
 						<img src="dist/images/logo.svg" />
@@ -549,569 +1111,6 @@
 							<li>Add a step that pushes to your GitHub packages using <code>${{ secrets.GITHUB_TOKEN }}</code></li>
 							<li>Verify that a second run uses the cache</li>
 						</ol>
-					</section>
-				</section>
-
-				<!-- Concretizer -->
-				<section>
-					<section>
-						<h2>Why is the concretizer necessary?</h2>
-					</section>
-					<section>
-						Installations can be finely tuned with the <em>spec syntax</em>
-						<pre><code data-trim data-noescape class="spec">
-						  # Specify a version range with `@`
-						  hdf5@1.10.1
-
-						  # Specify a compiler toolchain with `%`
-						  hdf5@1.10.1 %gcc@4.7.3
-
-						  # Activate or deactivate boolean variants
-						  hdf5@1.10.1 +szip ~fortran
-
-						  # Set multi-valued variants, or reserved keywords
-						  hdf5@1.10.1 build_type=Release target=x86_64_v4
-					</code></pre>
-					</section>
-					<section>
-						Each recipe can build a software in multiple ways
-						<pre><code class="python" data-trim>
-							class Hdf5(CMakePackage):
-								"""HDF5 is a data model, library, ... """
-
-								homepage = "https://portal.hdfgroup.org"
-								url      = "https://.../hdf5-1.14.3.tar.gz"
-
-								version("1.14.2", sha256="4b4b4453251")
-								version("1.12.3", sha256="49d88f4494a")
-
-								variant("shared", default=True, description="...")
-								variant("mpi",    default=True, description="...")
-
-								depends_on("mpi", when="+mpi")
-						</code></pre>
-					</section>
-					<section>
-						That's not alike other functional package managers...
-						<pre><code class="scheme" data-trim>
-(define-public hello
-  (package
-	(name "hello")
-	(version "2.10")
-	(source
-	  (origin
-		(method url-fetch)
-		(uri (string-append "hello-" version ".tar.gz"))
-		(sha256 (base32 "0ssi1..."))))
-	(build-system gnu-build-system)
-	(synopsis "Hello, GNU world: An example GNU package")
-	(description "GNU Hello prints ...")
-	(home-page "https://www.gnu.org/software/hello/")
-	(license gpl3+)))
-						</code></pre>
-					</section>
-					<section>
-						... and must solve a SAT problem to get a configuration
-						<div>
-							<img class="r-stretch" src="dist/images/concretizer.svg" style="background: none; border: 0px">
-						</div>
-					</section>
-					<section>
-						Using the concretizer allows trying different configurations much more easily
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code class="bash" data-trim>
-							# Try different variants, see how dependencies change
-							spack spec hfd5 ...
-
-							# Use spack graph to get more insight on DAG structure
-							# To visualize: https://dreampuf.github.io/GraphvizOnline/
-							spack graph -d --color ...
-
-							# Use a temporary environment to avoid reconcretizing
-							spack env activate --temp
-							spack add ...
-							spack concretize
-							...
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>Why is the concretizer so slow?</h2>
-					</section>
-					<section>
-						Dependency resolution is NP-hard!
-					</section>
-					<section>
-						Spack uses <em>clingo</em> and ASP to concretize
-					</section>
-					<section>
-						A crash course in the ASP language
-						<pre><code data-trim data-noescape data-line-numbers="1-3|5-7|9-10|12-16|18-23" class="prolog">
-							% Facts are specific "true" statements
-							node("lammps").
-							variant_set("laamps", "cuda", "false").
-
-							% Rules can derive additional facts
-							path(A, B) :- depends_on(A, B).
-							path(A, C) :- path(A, B), depends_on(B, C).
-
-							% Constraints say what cannot happen
-							:- path(A, B), path(B, A).
-
-							% Choice rules gives the solver freedom to choose
-							% from possible options
-							1 { version(Package, V)
-									: possible_version(Package, V) } 1
-								:- node(Package).
-
-							% Minimization defines the "optimal" solution
-							#minimize{
-								Weight,Package
-								: version_weight(Package, Weight),
-								  node(Package)
-							}.
-						</code></pre>
-					</section>
-					<section>
-						How does clingo solve the ASP problem?
-						<div>
-							<img  src="dist/images/asp-grounding.svg" style="background: none; border: 0px">
-						</div>
-					</section>
-					<section>
-						Where is time spent, then?
-						<pre><code data-trim data-noescape data-line-numbers="1|2,8|3,8|4,9|5,9|6,8-9" class="console">
-							$ spack solve --timers hdf5
-							setup          6.676s
-							load           0.979s
-							ground         3.700s
-							solve          7.666s
-							total         19.897s
-							[ ... ]
-							lib/spack/spack/solver/asp.py
-							lib/spack/spack/solver/concretize.lp
-						</code></pre>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code class="bash" data-trim>
-							# Try to time different concretizations
-							spack solve --timers ...
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>How does reuse work?</h2>
-					</section>
-					<section>
-						Concretization without reuse: <code>--fresh</code>
-						<div>
-							<img class="r-stretch" src="dist/images/hash-cache.svg" style="background: none; border: 0px">
-						</div>
-					</section>
-					<section>
-						Spack can also actively try to reuse
-						<pre><code data-trim data-noescape class="yaml">
-							concretizer:
-								# Whether to consider installed packages or packages
-								# from buildcaches when concretizing specs. If `true`,
-								# we'll try to use as many installs/binaries as possible,
-								# rather than building. If `false`, we'll always give you
-								# a fresh concretization. If `dependencies`, we'll only
-								# reuse dependencies but give you a fresh concretization
-								# for your root specs.
-								reuse: true
-						</code></pre>
-					</section>
-					<section>
-						<pre><code data-trim data-noescape class="console">
-							spack solve --show=asp hdf5
-						</code></pre>
-						<pre><code data-trim data-noescape class="small-text prolog">
-							installed_hash("diffutils","cguhjk").
-							imposed_constraint("cguhjk","node","diffutils").
-							imposed_constraint("cguhjk","version","diffutils","3.10").
-							imposed_constraint("cguhjk","node_platform","diffutils","linux").
-							imposed_constraint("cguhjk","node_os","diffutils","ubuntu20.04").
-							imposed_constraint("cguhjk","node_target","diffutils","icelake").
-							imposed_constraint("cguhjk","variant_value","diffutils","build_system","autotools").
-							imposed_constraint("cguhjk","node_compiler","diffutils","gcc").
-							imposed_constraint("cguhjk","node_compiler_version","diffutils","gcc","9.4.0").
-							imposed_constraint("cguhjk","package_hash","diffutils","kbm...").
-							imposed_constraint("cguhjk","hash","diffutils","cguhjk").
-							imposed_constraint("cguhjk","compatible_libc","diffutils","glibc","2.31").
-							imposed_constraint("cguhjk","depends_on","diffutils","libiconv","link").
-							imposed_constraint("cguhjk","virtual_on_edge","diffutils","libiconv","iconv").
-							imposed_constraint("cguhjk","virtual_node","iconv").
-							imposed_constraint("cguhjk","hash","libiconv","iel...").
-						</code></pre>
-					</section>
-					<section>
-						Spack v0.22 allows a <em>fine-tuned</em> selection
-					</section>
-					<section>
-						Reuse only specs compiled with GCC
-						<pre><code data-trim data-noescape class="yaml">
-							concretizer:
-								reuse:
-									roots: true
-									include:
-									- "%gcc"
-						</code></pre>
-					</section>
-					<section>
-						Use OpenMPI from externals
-						<pre><code data-trim data-noescape class="yaml">
-							concretizer:
-								reuse:
-									roots: true
-									from:
-									# OpenMPI should not be reused
-									# from store or buildcache...
-									- type: local
-									  exclude: ["openmpi"]
-									- type: buildcache
-									  exclude: ["openmpi"]
-									# ...and it must be the only external used
-									- type: external
-									  include: ["openmpi"]
-						</code></pre>
-					</section>
-					<section>
-						https://cache.spack.io/
-						<div>
-							<img height="40%" src="dist/images/build-cache.png" style="background: none; border: 0px">
-						</div>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code data-trim data-noescape class="bash">
-							# Check that using --fresh doesn't emit hash facts
-							spack solve --fresh --show=asp ... | less
-
-							# Add a mirror, retry
-							spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
-							spack buildcache keys --install --trust
-							spack solve --reuse --show=asp ... | less
-
-							# Now, use a finer selection from configuration
-							# https://spack.readthedocs.io/en/latest/build_settings.html#reuse-already-installed-packages
-							# Check how reused specs are added according to your filters
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>What is an optimal solution?</h2>
-					</section>
-					<section>
-						Many optimization criteria for an optimal spec
-						<ul class="small-text">
-							<li>Prefer newer versions</li>
-							<li>Prefer default values for variants</li>
-							<li>Prefer to use the same compiler across a DAG</li>
-							<li>...</li>
-						</ul>
-					</section>
-					<section>
-						A lower penalty on higher priority criteria is preferred
-						<pre><code data-trim data-noescape class="prolog">
-							% Choose most recent versions (priority 25)
-							#minimize{
-								Weight@25,node(Package)
-								: version_weight(node(Package), Weight)
-							}.
-
-							% Use default values for variants (priority 20)
-							#minimize{
-								1@20,Package,Variant,Value
-								: variant_default_not_used(Package, Variant, Value)
-							}.
-						</code></pre>
-					</section>
-					<section>
-						<img class="r-stretch" src="dist/images/sums.svg" style="background: none; border: 0px">
-					</section>
-					<section>
-
-						<code data-trim data-noescape class="console">
-							spack solve hdf5
-						</code>
-						<pre><code data-trim data-noescape class="console small-text">
-							Priority  Criterion                                            Installed  ToBuild
-							1         requirement weight                                           -        0
-							2         number of packages to build (vs. reuse)                      -        5
-							3         number of nodes from the same package                        -        0
-							4         deprecated versions used                                     0        0
-							5         version badness (roots)                                      0        0
-							6         number of non-default variants (roots)                       0        0
-							7         preferred providers for roots                                0        0
-							8         default values of variants not being used (roots)            0        0
-							9         number of non-default variants (non-roots)                  11        0
-							10        preferred providers (non-roots)                              0        0
-							11        compiler mismatches that are not from CLI                   23        0
-							12        compiler mismatches that are not from CLI                    0        0
-							13        non-preferred OS's                                          33        0
-							14        version badness (non roots)                                329        0
-							15        default values of variants not being used (non-roots)        2        0
-							16        non-preferred compilers                                     64        0
-							17        target mismatches                                            8        0
-							18        non-preferred targets                                      288        0
-							19        compiler mismatches (runtimes)                               4        0
-							20        version badness (runtimes)                                   0        0
-							21        non-preferred targets (runtimes)                             9        0
-							22        edge wiring                                                588        0
-						</code></pre>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code class="bash" data-trim>
-							# Check how weights are changing depending on the spec
-							# and the overall configuration.
-							spack solve --reuse ...
-							spack solve --fresh ...
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>How are errors modeled?</h2>
-					</section>
-					<section>
-						<code>clingo</code> is not that helpful on unsat problems
-						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
-							node("a").
-
-							attribute(P) :- node(P).
-							:- attribute(P).
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ clingo example.lp
-							clingo version 5.6.2
-							Reading from example.lp
-							Solving...
-							UNSATISFIABLE
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ spack spec foo
-							==> Error: UNSATISFIABLE
-						</code></pre>
-					</section>
-					<section>
-						Make errors part of a valid solution
-						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
-							node("a").
-
-							attribute(P) :- node(P).
-							error("{P} cannot have an attribute!", P) :- attribute(P).
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ clingo example.lp
-							clingo version 5.6.2
-							Reading from example.lp
-							Solving...
-							Answer: 1
-							node("a") attribute("a") error("{P} cannot have an attribute!","a")
-							SATISFIABLE
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ spack spec foo
-							==> Error: foo cannot have an attribute!
-						</code></pre>
-					</section>
-					<section>
-						Highest priority optimization is <em>minimize errors</em>
-					</section>
-					<section>
-						<div>
-							<img src="dist/images/error-flow-chart.svg" style="background: none; border: 0px">
-						</div>
-					</section>
-					<section>
-						<pre><code data-trim data-noescape class="console tiny-text">
-							$ spack spec hdf5@1.14 ^cmake@3.16
-							==> Error: concretization failed for the following reasons:
-
-							1. Cannot select a single "version" for package "cmake"
-							2. Cannot satisfy 'cmake@:3.17'
-							3. Cannot satisfy 'cmake@:3.16'
-							4. Cannot satisfy 'cmake@3.18:'
-							5. Cannot satisfy 'cmake@3.16'
-							6. Cannot satisfy 'cmake@3.18:'
-									required because hdf5 depends on cmake@3.18: when @1.13:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							7. Cannot satisfy 'cmake@3.16'
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							8. Cannot satisfy 'cmake@3.18:' and 'cmake@3.16
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-									required because hdf5 depends on cmake@3.18: when @1.13:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							9. Cannot satisfy 'cmake@3.16' and 'cmake@3.18:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-									required because hdf5 depends on cmake@3.18: when @1.13:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							10. Cannot satisfy 'cmake@3.12:' and 'cmake@3.16
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-									required because hdf5 depends on cmake@3.12:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>What are requirements and strong preferences?</h2>
-					</section>
-					<section>
-						Enforce constraints from <code>package.py</code> or configuration
-					</section>
-					<section>
-						In a recipe:
-						<pre><code data-trim data-noescape class="python">
-						class Hdf5(CMakePackage):
-
-							requires("%gcc", msg="This package must be built with GCC")
-						</code></pre>
-						From configuration:
-						<pre><code data-trim data-noescape class="YAML">
-						packages:
-							hdf5:
-								require:
-								- spec: "%gcc"
-								  message: "This package must be built with GCC"
-						</code></pre>
-					</section>
-					<section>
-						Setting default requirements
-						<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								require:
-								- "+shared +cuda"
-						</code></pre>
-						vs.
-						<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								require:
-								- "+shared"
-								- "+cuda"
-						</code></pre>
-					</section>
-					<section>
-						Package specific requirements override defaults
-						<pre><code data-trim data-noescape class="YAML">
-							packages:
-								all:
-									require:
-									- 'build_type=Debug'
-									- '%clang'
-								cmake:
-									require:
-									- '%gcc'
-						</code></pre>
-					</section>
-					<section>
-						Requirements on virtual packages
-						<pre><code data-trim data-noescape class="YAML">
-							packages:
-								mpi:
-									require:
-									- 'mvapich2 %gcc'
-								mvapich2:
-									require:
-									- '~cuda'
-						</code></pre>
-					</section>
-					<section>
-					Strong preferences
-					<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								prefer:
-								- 'build_type=Release'
-								- '+cuda'
-					</code></pre>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code data-trim data-noescape class="bash">
-							# Add a requirement to configuration,
-							# try to violate it, check the error message
-
-							# Do the same with a strong preference, observe
-							# spack solve weights
-
-							# Enforce virtuals in an environment using
-							# requirements
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>How can I constrain a virtual provider in a recipe?</h2>
-					</section>
-					<section>
-						Refer to a provider in a condition
-						<pre><code class="python" data-trim data-noescape>
-							class Hdf5VolAsync(CMakePackage):
-
-								depends_on("mpi")
-
-								# If using openmpi as a provider, needs
-								# thread multiple support
-								depends_on(
-									"openmpi +thread_multiple",
-									when="^[virtuals=mpi] openmpi@:2"
-								)
-						</code></pre>
-					</section>
-					<section>
-						This is bad, since it's self referential
-						<pre><code class="python" data-trim data-noescape>
-							class Hdf5VolAsync(CMakePackage):
-
-								depends_on("mpi")
-
-								# openmpi can be used as a "normal" dependency
-								# clingo can choose to add it or not
-								depends_on(
-									"openmpi +thread_multiple",
-									when="^openmpi@:2"
-								)
-						</code></pre>
-					</section>
-					<section>
-						Conditionally constrain a normal package
-						<pre><code class="python" data-trim data-noescape>
-							class GribUtil(CMakePackage)::
-
-								depends_on("ip")
-
-								# If ip is at version 4.1 or later, then also
-								# require precision=d
-								requires("^ip precision=d", when="^ip@4.1:")
-						</code></pre>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code data-trim data-noescape class="bash">
-							# Make mpich the preferred provider
-							spack config add packages:all:providers:mpi:[mpich]
-
-							# Try to concretize hdf5-vol-async with different mpis
-							spack spec hdf5-vol-async ^mpich
-							spack spec hdf5-vol-async ^openmpi
-
-							# Edit hdf5-vol-async to use the wrong idiom
-							# and repeat
-
-							# https://dreampuf.github.io/GraphvizOnline
-							spack graph -d --color hdf5-vol-async ^openmpi
-						</code></pre>
 					</section>
 				</section>
 			</div>

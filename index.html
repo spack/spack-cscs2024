@@ -158,7 +158,24 @@
 					<section>
 						<h2>Spack 0.23 🔮</h2>
 						<p>Express dependencies of compilers</p>
-						<img src="dist/images/clang-runtime.svg"  class="stretch" />
+						<div class="r-stack stretch">
+							<pre class="fragment current-visible"><code data-trim data-noescape>
+								$ clang -v
+								Ubuntu clang version 16.0.6 (15)
+								Target: x86_64-pc-linux-gnu
+								Thread model: posix
+								InstalledDir: /usr/bin
+								Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/10
+								Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
+								Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+								Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+								Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+
+								$ $(clang -print-prog-name=as) --version | head -n1
+								GNU assembler (GNU Binutils for Ubuntu) 2.41
+							</code></pre>
+							<img src="dist/images/clang-runtime.svg"  class="fragment" />
+						</div>
 					</section>
 					<section>
 						<h2>Spack 0.23 🔮</h2>

@@ -473,6 +473,19 @@
 							<li>Compose images from multiple Spack packages</li>
 						</ul>
 					</section>
+					<section>
+						<h2>Combine with GitHub actions</h2>
+						<ol>
+							<li>Create a GitHub repo</li>
+							<li>Add a <strong><code>spack.yaml</code></strong> environment with some spec</li>
+							<li>Add <strong><code>.github/workflows/ci.yaml</code></strong></li>
+							<li>Use the <strong><code>spack/setup-spack</code></strong> action</li>
+							<li>Add a concretize step</li>
+							<li>Add an install step</li>
+							<li>Add a step that pushes to your GitHub packages using <code>${{ secrets.GITHUB_TOKEN }}</code></li>
+							<li>Verify that a second run uses the cache</li>
+						</ol>
+					</section>
 				</section>
 
 				<!-- Concretizer -->

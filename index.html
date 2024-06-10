@@ -293,7 +293,7 @@
 					</code></pre>
 					</section>
 					<section>
-						Each recipe builds a software under <em>different scenarios</em>
+						Each recipe can build a software in multiple ways
 						<pre><code class="python" data-trim>
 							class Hdf5(CMakePackage):
 								"""HDF5 is a data model, library, ... """
@@ -337,6 +337,23 @@
 					</section>
 					<section>
 						Using the concretizer allows trying different configurations much more easily
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code class="bash" data-trim>
+							# Try different variants, see how dependencies change
+							spack spec hfd5 ...
+
+							# Use spack graph to get more insight on DAG structure
+							# To visualize: https://dreampuf.github.io/GraphvizOnline/
+							spack graph -d --color ...
+
+							# Use a temporary environment to avoid reconcretizing
+							spack env activate --temp
+							spack add ...
+							spack concretize
+							...
+						</code></pre>
 					</section>
 				</section>
 				<section>

@@ -72,19 +72,20 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
 
 /* Spack spec lang */
 
-.hljs-spec-arch {
-  color: #a347ba;
-}
 .hljs-spec-variant {
   color: #7bb7ff;
+  font-weight: bold;
 }
 .hljs-spec-compiler, .hljs-spec-status-installed {
   color: #31ffa0;
+  font-weight: bold;
 }
 .hljs-spec-version {
   color: #61eaff;
+  font-weight: bold;
 }
 .hljs-spec-arch {
+  font-weight: bold;
   color: #de5bff;
 }
 .hljs-spec-command-line {

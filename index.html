@@ -35,6 +35,49 @@
 				</section>
 				<section>
 					<section>
+						<h2>Quick <img src="dist/images/logo.svg" style=" display: inline-block; vertical-align:middle;" /> refresher</h2>
+					</section>
+					<section>
+						<h2 class="r-fit-text">Software installations are <br/>more than name and version</h2>
+						<ul>
+							<li>What compiler did you use?</li>
+							<li>What architecture did you compile for?</li>
+							<li>What configure flags did you set?</li>
+							<li>What dependencies did you use?</li>
+						</ul>
+						<p class="fragment"><code>cp2k-2024.1-avx2-cuda-custom-patch-final-final/</code></p>
+					</section>
+					<section>
+						<h2 class="r-fit-text">Identify installations by hash of inputs</h2>
+						<div class="r-stack stretch">
+							<img class="fragment current-visible" src="dist/images/hash.svg" />
+							<ul class="fragment">
+								<li>Merkel hash of dependency graph</li>
+								<li>Hash name, version, source, build instructions per node</li>
+								<li class="fragment"><code>cp2k-2024.1-xexq3v6d76uebivz44i7</code></li>
+							</ul>
+						</div>
+					</section>
+					<section>
+						<h2 class="r-fit-text">Single package definitions</h2>
+						<ul>
+							<li>Single <strong><code>package.py</code></strong> for every package</li>
+							<li>Whether you're on your laptop, Alps, Lumi, Fugaku...</li>
+							<li>Avoids fragmentation</li>
+							<li>Hundreds of monthly contributors work together</li>
+						</ul>
+					</section>
+					<section>
+						<h2 class="r-fit-text">Highly customizable</h2>
+						<pre class="spec"><code data-trim data-noescape>
+							spack install hdf5
+							spack install hdf5@1.12 %gcc@10
+							spack install hdf5@1.12.3 ^mpich@4.2
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
 						<img src="dist/images/logo.svg" />
 						<h1 class="r-fit-text">What's new in Spack?</h1>
 						<p>and what's to come?</p>

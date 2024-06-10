@@ -275,6 +275,18 @@
 							<li><code>pip list</code> and <code>pip install</code> interop</li>
 						</ul>
 					</section>
+					<section>
+						<h2>Hands on idea</h2>
+						<ul>
+							<li>Create an environment with view
+							<pre><code>spack env create --with-view ./view .</code></pre>
+							</li>
+							<li>add and install <code>py-pip</code> and others
+							<pre><code>spack -e . install --add py-pip py-black</code></pre></li>
+							<li>try <code>source view/bin/activate</code></li>
+							<li>and <code>pip list</code> or <code>pip install</code></li>
+						</ul>
+					</section>
 				</section>
 
 				<section>

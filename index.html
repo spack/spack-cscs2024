@@ -1278,6 +1278,7 @@
 			KEY_VALUE_PAIR = `${NAME}=(${VALUE}|${QUOTED_VALUE})`
 			COMMAND_LINE = `^\\$.+(\\$)*$`
 			Reveal.initialize({
+				transitionSpeed: "fast",
 				highlight: {
 					beforeHighlight: (hljs) => hljs.registerLanguage("spec", function() {
 						return {

@@ -496,159 +496,6 @@
 				</section>
 				<section>
 					<section>
-						<h2>What are requirements and strong preferences?</h2>
-					</section>
-					<section>
-						Enforce constraints from <code>package.py</code> or configuration
-					</section>
-					<section>
-						In a recipe:
-						<pre><code data-trim data-noescape class="python">
-						class Hdf5(CMakePackage):
-
-							requires("%gcc", msg="This package must be built with GCC")
-						</code></pre>
-						From configuration:
-						<pre><code data-trim data-noescape class="YAML">
-						packages:
-							hdf5:
-								require:
-								- spec: "%gcc"
-								message: "This package must be built with GCC"
-						</code></pre>
-					</section>
-					<section>
-						Setting default requirements
-						<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								require:
-								- "+shared +cuda"
-						</code></pre>
-						vs.
-						<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								require:
-								- "+shared"
-								- "+cuda"
-						</code></pre>
-					</section>
-					<section>
-						Package specific requirements override defaults
-						<pre><code data-trim data-noescape class="YAML">
-							packages:
-								all:
-									require:
-									- 'build_type=Debug'
-									- '%clang'
-								cmake:
-									require:
-									- '%gcc'
-						</code></pre>
-					</section>
-					<section>
-						Requirements on virtual packages
-						<pre><code data-trim data-noescape class="YAML">
-							packages:
-								mpi:
-									require:
-									- 'mvapich2 %gcc'
-								mvapich2:
-									require:
-									- '~cuda'
-						</code></pre>
-					</section>
-					<section>
-					Strong preferences
-					<pre><code data-trim data-noescape class="YAML">
-						packages:
-							all:
-								prefer:
-								- 'build_type=Release'
-								- '+cuda'
-					</code></pre>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code data-trim data-noescape class="bash">
-							# Add a requirement to configuration,
-							# try to violate it, check the error message
-
-							# Do the same with a strong preference, observe
-							# spack solve weights
-
-							# Enforce virtuals in an environment using
-							# requirements
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>How can I constrain a virtual provider in a recipe?</h2>
-					</section>
-					<section>
-						Refer to a provider in a condition
-						<pre><code class="python" data-trim data-noescape>
-							class Hdf5VolAsync(CMakePackage):
-
-								depends_on("mpi")
-
-								# If using openmpi as a provider, needs
-								# thread multiple support
-								depends_on(
-									"openmpi +thread_multiple",
-									when="^[virtuals=mpi] openmpi@:2"
-								)
-						</code></pre>
-					</section>
-					<section>
-						This is bad, since it's self referential
-						<pre><code class="python" data-trim data-noescape>
-							class Hdf5VolAsync(CMakePackage):
-
-								depends_on("mpi")
-
-								# openmpi can be used as a "normal" dependency
-								# clingo can choose to add it or not
-								depends_on(
-									"openmpi +thread_multiple",
-									when="^openmpi@:2"
-								)
-						</code></pre>
-					</section>
-					<section>
-						Conditionally constrain a normal package
-						<pre><code class="python" data-trim data-noescape>
-							class GribUtil(CMakePackage)::
-
-								depends_on("ip")
-
-								# If ip is at version 4.1 or later, then also
-								# require precision=d
-								requires("^ip precision=d", when="^ip@4.1:")
-						</code></pre>
-					</section>
-					<section>
-						<h2>Hands-on</h2>
-						<pre><code data-trim data-noescape class="bash">
-							# Make mpich the preferred provider
-							spack config add packages:all:providers:mpi:[mpich]
-
-							# Try to concretize hdf5-vol-async with different mpis
-							spack spec hdf5-vol-async ^mpich
-							spack spec hdf5-vol-async ^openmpi
-
-							# Edit hdf5-vol-async to use the wrong idiom
-							# and repeat
-
-							# https://dreampuf.github.io/GraphvizOnline
-							spack graph -d --color hdf5-vol-async ^openmpi
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
 						<h1 class="r-fit-text">What are runtimes in Spack 0.22?</h1>
 					</section>
 					<section>
@@ -896,10 +743,163 @@
 						</ul>
 					</section>
 				</section>
+				<section>
+					<section>
+						<h2>What are requirements and strong preferences?</h2>
+					</section>
+					<section>
+						Enforce constraints from <code>package.py</code> or configuration
+					</section>
+					<section>
+						In a recipe:
+						<pre><code data-trim data-noescape class="python">
+						class Hdf5(CMakePackage):
+
+							requires("%gcc", msg="This package must be built with GCC")
+						</code></pre>
+						From configuration:
+						<pre><code data-trim data-noescape class="YAML">
+						packages:
+							hdf5:
+								require:
+								- spec: "%gcc"
+								message: "This package must be built with GCC"
+						</code></pre>
+					</section>
+					<section>
+						Setting default requirements
+						<pre><code data-trim data-noescape class="YAML">
+						packages:
+							all:
+								require:
+								- "+shared +cuda"
+						</code></pre>
+						vs.
+						<pre><code data-trim data-noescape class="YAML">
+						packages:
+							all:
+								require:
+								- "+shared"
+								- "+cuda"
+						</code></pre>
+					</section>
+					<section>
+						Package specific requirements override defaults
+						<pre><code data-trim data-noescape class="YAML">
+							packages:
+								all:
+									require:
+									- 'build_type=Debug'
+									- '%clang'
+								cmake:
+									require:
+									- '%gcc'
+						</code></pre>
+					</section>
+					<section>
+						Requirements on virtual packages
+						<pre><code data-trim data-noescape class="YAML">
+							packages:
+								mpi:
+									require:
+									- 'mvapich2 %gcc'
+								mvapich2:
+									require:
+									- '~cuda'
+						</code></pre>
+					</section>
+					<section>
+					Strong preferences
+					<pre><code data-trim data-noescape class="YAML">
+						packages:
+							all:
+								prefer:
+								- 'build_type=Release'
+								- '+cuda'
+					</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Add a requirement to configuration,
+							# try to violate it, check the error message
+
+							# Do the same with a strong preference, observe
+							# spack solve weights
+
+							# Enforce virtuals in an environment using
+							# requirements
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How can I constrain a virtual provider in a recipe?</h2>
+					</section>
+					<section>
+						Refer to a provider in a condition
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# If using openmpi as a provider, needs
+								# thread multiple support
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^[virtuals=mpi] openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						This is bad, since it's self referential
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# openmpi can be used as a "normal" dependency
+								# clingo can choose to add it or not
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						Conditionally constrain a normal package
+						<pre><code class="python" data-trim data-noescape>
+							class GribUtil(CMakePackage)::
+
+								depends_on("ip")
+
+								# If ip is at version 4.1 or later, then also
+								# require precision=d
+								requires("^ip precision=d", when="^ip@4.1:")
+						</code></pre>
+					</section>
+					<section>
+						<h2>Hands-on</h2>
+						<pre><code data-trim data-noescape class="bash">
+							# Make mpich the preferred provider
+							spack config add packages:all:providers:mpi:[mpich]
+
+							# Try to concretize hdf5-vol-async with different mpis
+							spack spec hdf5-vol-async ^mpich
+							spack spec hdf5-vol-async ^openmpi
+
+							# Edit hdf5-vol-async to use the wrong idiom
+							# and repeat
+
+							# https://dreampuf.github.io/GraphvizOnline
+							spack graph -d --color hdf5-vol-async ^openmpi
+						</code></pre>
+					</section>
+				</section>
 
 				<section>
 					<section>
-						<h2>Hands on OCI build caches</h2>
+						<h2>How to use OCI build caches?</h2>
 						<ul>
 							<li>Learn about build caches</li>
 							<li>Create container images</li>
@@ -1110,7 +1110,12 @@
 						<h2>Hands on 2: OCI structure</h2>
 						<ol>
 							<li>Use <strong><code>skopeo</code></strong> to download a Spack-built image</li>
-							<li>Inspect the manifest / blob structure</li>
+							<li>Inspect the manifest / blob structure
+								<ul>
+									<li><code>jq &lt; [manifest]</code></li>
+									<li><code>tar tf [blob]</code></li>
+								</ul>
+							</li>
 						</ol>
 					</section>
 				</section>

@@ -342,8 +342,8 @@
 						<h2>What is an optimal solution?</h2>
 					</section>
 					<section>
-						Many optimization criteria for an optimal spec
-						<ul class="small-text">
+						<h2>Many optimization criteria for an optimal spec</h2>
+						<ul>
 							<li>Prefer newer versions</li>
 							<li>Prefer default values for variants</li>
 							<li>Prefer to use the same compiler across a DAG</li>
@@ -1094,7 +1094,7 @@
 						</ul>
 					</section>
 					<section>
-						<h2>Try it yourself</h2>
+						<h2>Hands on 1: GitHub Actions</h2>
 						<ol>
 							<li>Create a GitHub repo</li>
 							<li>Add a <strong><code>spack.yaml</code></strong> environment with some spec</li>
@@ -1104,6 +1104,13 @@
 							<li>Add an install step</li>
 							<li>Add a step that pushes to your GitHub packages using <code>${{ secrets.GITHUB_TOKEN }}</code></li>
 							<li>Verify that a second run uses the cache</li>
+						</ol>
+					</section>
+					<section>
+						<h2>Hands on 2: OCI structure</h2>
+						<ol>
+							<li>Use <strong><code>skopeo</code></strong> to download a Spack-built image</li>
+							<li>Inspect the manifest / blob structure</li>
 						</ol>
 					</section>
 				</section>

@@ -845,22 +845,7 @@
 						<h2>How can I constrain a virtual provider in a recipe?</h2>
 					</section>
 					<section>
-						Refer to a provider in a condition
-						<pre><code class="python" data-trim data-noescape>
-							class Hdf5VolAsync(CMakePackage):
-
-								depends_on("mpi")
-
-								# If using openmpi as a provider, needs
-								# thread multiple support
-								depends_on(
-									"openmpi +thread_multiple",
-									when="^[virtuals=mpi] openmpi@:2"
-								)
-						</code></pre>
-					</section>
-					<section>
-						This is bad, since it's self referential
+						🙁 Bad, clingo can choose to add a node!
 						<pre><code class="python" data-trim data-noescape>
 							class Hdf5VolAsync(CMakePackage):
 
@@ -875,7 +860,22 @@
 						</code></pre>
 					</section>
 					<section>
-						Conditionally constrain a normal package
+						😐 Acceptable, but only for providers
+						<pre><code class="python" data-trim data-noescape>
+							class Hdf5VolAsync(CMakePackage):
+
+								depends_on("mpi")
+
+								# If using openmpi as a provider, needs
+								# thread multiple support
+								depends_on(
+									"openmpi +thread_multiple",
+									when="^[virtuals=mpi] openmpi@:2"
+								)
+						</code></pre>
+					</section>
+					<section>
+						🙂 Good for any type of dependency!
 						<pre><code class="python" data-trim data-noescape>
 							class GribUtil(CMakePackage)::
 
@@ -896,8 +896,7 @@
 							spack spec hdf5-vol-async ^mpich
 							spack spec hdf5-vol-async ^openmpi
 
-							# Edit hdf5-vol-async to use the wrong idiom
-							# and repeat
+							# Edit hdf5-vol-async to use the wrong idiom and repeat
 
 							# https://dreampuf.github.io/GraphvizOnline
 							spack graph -d --color hdf5-vol-async ^openmpi

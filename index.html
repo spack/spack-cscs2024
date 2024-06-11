@@ -1033,20 +1033,6 @@
 						</div>
 					</section>
 					<section>
-						<h2>What's an OCI registry again?</h2>
-						<div class="r-stack">
-							<ul class="fragment current-visible">
-								<li>Bunch of <strong>blobs</strong> and <strong>manifests</strong></li>
-								<li><strong>Blobs</strong> are tarballs named by sha256</li>
-								<li><strong>Manifests</strong> are tags &amp; list <strong>blobs</strong> as layers</li>
-								<li>One blob for every Spack package prefix</li>
-								<li>One manifest for every Spack package</li>
-								<li>... with many layers: all runtime deps included</li>
-							</ul>
-							<img src="dist/images/oci-structure.svg" class="fragment" />
-						</div>
-					</section>
-					<section>
 						<h2>Tag an environment</h2>
 						<ul>
 							<li>By default: single root per container image</li>
@@ -1118,6 +1104,21 @@
 								</ul>
 							</li>
 						</ol>
+					</section>
+
+					<section>
+						<h2>What's an OCI registry again?</h2>
+						<div class="r-stack">
+							<ul class="fragment current-visible">
+								<li>Bunch of <strong>blobs</strong> and <strong>manifests</strong></li>
+								<li><strong>Blobs</strong> are tarballs named by sha256</li>
+								<li><strong>Manifests</strong> are tags &amp; list <strong>blobs</strong> as layers</li>
+								<li>One blob for every Spack package prefix</li>
+								<li>One manifest for every Spack package</li>
+								<li>... with many layers: all runtime deps included</li>
+							</ul>
+							<img src="dist/images/oci-structure.svg" class="fragment" />
+						</div>
 					</section>
 				</section>
 

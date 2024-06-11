@@ -156,17 +156,18 @@
 						<h2>Hands-on</h2>
 						<pre><code class="bash" data-trim>
 							# Try different variants, see how dependencies change
-							spack spec hfd5 ...
+							spack spec hfd5+mpi
+							spack spec hfd5~mpi
 
 							# Use spack graph to get more insight on DAG structure
 							# To visualize: https://dreampuf.github.io/GraphvizOnline/
-							spack graph -d --color ...
+							spack graph -d --color hdf5+mpi
 
 							# Use a temporary environment to avoid reconcretizing
 							spack env activate --temp
-							spack add ...
+							spack add hdf5~mpi
 							spack concretize
-							...
+							spack graph -d --color
 						</code></pre>
 					</section>
 				</section>
@@ -176,6 +177,7 @@
 					</section>
 					<section>
 						Dependency resolution is NP-hard!
+						<p class="fragment">Performance is a currency for buying features!</p>
 					</section>
 					<section>
 						Spack uses <em>clingo</em> and ASP to concretize
@@ -241,7 +243,11 @@
 						<h2>How does reuse work?</h2>
 					</section>
 					<section>
-						Concretization without reuse: <code>--fresh</code>
+						"Reuse" actively tries to prefer known configurations to
+						configurations yet to be built.
+					</section>
+					<section>
+						Hash matches are very sensitive to small changes
 						<div>
 							<img class="r-stretch" src="dist/images/hash-cache.svg" style="background: none; border: 0px">
 						</div>
@@ -324,16 +330,17 @@
 						<h2>Hands-on</h2>
 						<pre><code data-trim data-noescape class="bash">
 							# Check that using --fresh doesn't emit hash facts
-							spack solve --fresh --show=asp ... | less
+							spack solve --fresh --show=asp cmake | less
+							spack solve --fresh cmake
 
 							# Add a mirror, retry
 							spack mirror add developer-tools https://binaries.spack.io/develop/developer-tools-manylinux2014
 							spack buildcache keys --install --trust
-							spack solve --reuse --show=asp ... | less
+							spack solve --reuse --show=asp cmake | less
+							spack install cmake
 
-							# Now, use a finer selection from configuration
-							# https://spack.readthedocs.io/en/latest/build_settings.html#reuse-already-installed-packages
-							# Check how reused specs are added according to your filters
+							# You can also install the latest GCC from binaries
+							spack install gcc
 						</code></pre>
 					</section>
 				</section>
@@ -342,7 +349,7 @@
 						<h2>What is an optimal solution?</h2>
 					</section>
 					<section>
-						<h2>Many optimization criteria for an optimal spec</h2>
+						<h3>Multiple optimization criteria</h3>
 						<ul>
 							<li>Prefer newer versions</li>
 							<li>Prefer default values for variants</li>
@@ -405,8 +412,9 @@
 						<pre><code class="bash" data-trim>
 							# Check how weights are changing depending on the spec
 							# and the overall configuration.
-							spack solve --reuse ...
-							spack solve --fresh ...
+							spack solve --fresh cmake
+							spack solve --reuse cmake
+							spack solve --reuse hdf5
 						</code></pre>
 					</section>
 				</section>

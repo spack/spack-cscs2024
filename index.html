@@ -897,6 +897,7 @@
 					</section>
 				</section>
 
+				<!-- OCI build caches -->
 				<section>
 					<section>
 						<h2>How to use OCI build caches?</h2>
@@ -1117,6 +1118,136 @@
 								</ul>
 							</li>
 						</ol>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Development and troubleshooting</h2>
+						<ul>
+							<li>Environments</li>
+							<li><code>spack develop</code></li>
+							<li><code>spack build-env</code></li>
+							<li>Troubleshooting builds</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Development tools</h3>
+						I usually have <strong><code>~/dev/spack.yaml</code></strong>
+						<pre><code class="spec" data-trim data-noescape>
+						spack:
+						  specs:
+						  - ccache@4
+						  - python@3.11 +optimizations %clang 
+						  view:
+						    default:
+						      root: ./view
+						      link: run  # only put run deps in view
+						</code></pre>
+						Together with <strong><code>~/.bash_profile</code></strong>:
+						<pre><code class="bash" data-trim data-noescape>
+							export PATH="$HOME/dev/view/bin:$PATH"
+						</code></pre>
+						<p style="font-size: 0.5em;">and</p>
+						<pre><code>spack config add config:ccache:true</code></pre>
+					</section>
+					<section>
+						<h3>Developing a package</h3>
+						<ul><li>People often create a <strong><code>spack.yaml</code></strong> file with the dependencies of the package they want to develop</li></ul>
+						<pre class="spec"><code data-trim data-noescape>
+						spack:
+						  specs:
+						  - mpich@4 +fortran
+						  - cmake
+						  - gmake
+						  - openblas
+						  - cuda@11
+						  concretizer:
+						    unify: true
+						</code></pre>
+						<ul>
+							<li>But: <strong>spack env activate</strong> just sets up runtime variables &mdash; no <code>CC</code>, <code>CXX</code>, etc.</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Developing a package</h3>
+						Better immediately
+						<pre><code>spack create -n my-package</code></pre>
+						<pre class="python"><code data-trim data-noescape>
+						class MyPackage(CMakePackage):
+						  git = "file:///path/to/repo"  # or https://...
+
+						  version("main", branch="main")
+
+						  depends_on("mpi")
+						  depends_on("blas")
+						  depends_on("cuda")
+						</code></pre>
+						and update <strong><code>spack.yaml</code></strong>
+						<pre class="spec"><code data-trim data-noescape>
+						spack:
+						  specs:
+						  - my-package ^cuda@11 ^mpich@4 +fortran ^openblas
+						</code></pre>
+					</section>
+					<section>
+						<h3>Developing a package</h3>
+						From there...
+						<pre class="shell"><code data-trim data-noescape>
+							$ spack -e . concretize
+							$ spack -e . install --only=dependencies
+						</code></pre>
+						and either manually run a build in a shell with all build environment variables set
+						<pre class="shell"><code data-trim data-noescape>
+							$ spack -e . build-env my-package -- /bin/bash -l
+						</code></pre>
+						or use <strong><code>spack develop</code></strong>
+					</section>
+					<section>
+						<h3>Developing a package</h3>
+						The <strong><code>spack develop</code></strong> command
+						<pre class="shell"><code data-trim data-noescape>
+							$ spack -e . develop \
+							    --path /path/to/my/sources \
+							    my-package@main
+							$ spack -e . concretize -f
+						</code></pre>
+						just updates the <strong><code>spack.yaml</code></strong> file:
+						<pre class="spec"><code data-trim data-noescape>
+						spack:
+						  specs:
+						  - my-package ^cuda@11 ^mpich@4 +fortran ^openblas
+						  develop:
+						    my-package:
+						      spec: my-package@=main
+						      path: /path/to/my/sources
+						</code></pre>
+					</section>
+					<section>
+						<h3>Developing a package</h3>
+						After concretization, you will see a "reserved" variant
+						<pre class="spec"><code data-noescape>my-package@main %gcc@13.2.0 dev_path=/path/to/my/sources</code></pre>
+						and <strong><code>spack install</code></strong> will automatically do an <em>overwrite</em> install if any of the source files change
+						<pre class="bash"><code data-noescape data-trim>
+							$ touch /path/to/my/sources/my-package.c
+							$ spack -e . install  # 🔁
+						</code></pre>
+					</section>
+					<section>
+						<h3>Useful in general</h3>
+						<ul>
+							<li>If a build fails, consider <strong><code>spack develop</code></strong></li>
+							<li>Make changes to the sources to get past a build failure <span class="fragment">... and submit a patch 😏</span></li>
+							<li class="fragment">Without <strong><code>spack develop</code></strong>: Spack often clears the temporary stage dir</li>
+							<li class="fragment">With <strong><code>spack develop</code></strong>: persistent stage dir</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Hands on</h3>
+						<ul>
+							<li><a href="https://spack-tutorial.rtfd.io">https://spack-tutorial.rtfd.io</a></li>
+							<li>Click <strong>Developer Workflows Tutorial</strong></li>
+						</ul>
 					</section>
 				</section>
 			</div>

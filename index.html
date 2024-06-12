@@ -816,17 +816,14 @@
 					<section>
 						<h2>Hands-on</h2>
 						<pre><code data-trim data-noescape class="bash">
-							# Make mpich the preferred provider
-							spack config add packages:all:providers:mpi:[mpich]
-
 							# Try to concretize hdf5-vol-async with different mpis
-							spack spec hdf5-vol-async ^mpich
+							spack spec hdf5-vol-async ^mvapich2
 							spack spec hdf5-vol-async ^openmpi
 
 							# Edit hdf5-vol-async to use the wrong idiom and repeat
 
 							# https://dreampuf.github.io/GraphvizOnline
-							spack graph -d --color hdf5-vol-async ^openmpi
+							spack graph -d --color hdf5-vol-async ^mvapich2
 						</code></pre>
 					</section>
 				</section>

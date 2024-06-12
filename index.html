@@ -166,7 +166,7 @@
 
 							# Use spack graph to get more insight on DAG structure
 							# To visualize: https://dreampuf.github.io/GraphvizOnline/
-							spack graph -d --color hdf5+mpi
+							spack graph -d --color hdf5~mpi
 
 							# Use a temporary environment to avoid reconcretizing
 							spack env activate --temp
@@ -317,12 +317,12 @@
 									# OpenMPI should not be reused
 									# from store or buildcache...
 									- type: local
-									exclude: ["openmpi"]
+									  exclude: ["openmpi"]
 									- type: buildcache
-									exclude: ["openmpi"]
+									  exclude: ["openmpi"]
 									# ...and it must be the only external used
 									- type: external
-									include: ["openmpi"]
+									  include: ["openmpi"]
 						</code></pre>
 					</section>
 					<section>
@@ -420,90 +420,6 @@
 							spack solve --fresh cmake
 							spack solve --reuse cmake
 							spack solve --reuse hdf5
-						</code></pre>
-					</section>
-				</section>
-				<section>
-					<section>
-						<h2>How are errors modeled?</h2>
-					</section>
-					<section>
-						<code>clingo</code> is not that helpful on unsat problems
-						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
-							node("a").
-
-							attribute(P) :- node(P).
-							:- attribute(P).
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ clingo example.lp
-							clingo version 5.6.2
-							Reading from example.lp
-							Solving...
-							UNSATISFIABLE
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ spack spec foo
-							==> Error: UNSATISFIABLE
-						</code></pre>
-					</section>
-					<section>
-						Make errors part of a valid solution
-						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
-							node("a").
-
-							attribute(P) :- node(P).
-							error("{P} cannot have an attribute!", P) :- attribute(P).
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ clingo example.lp
-							clingo version 5.6.2
-							Reading from example.lp
-							Solving...
-							Answer: 1
-							node("a") attribute("a") error("{P} cannot have an attribute!","a")
-							SATISFIABLE
-						</code></pre>
-						<pre><code data-trim data-noescape class="console">
-							$ spack spec foo
-							==> Error: foo cannot have an attribute!
-						</code></pre>
-					</section>
-					<section>
-						Highest priority optimization is <em>minimize errors</em>
-					</section>
-					<section>
-						<div>
-							<img src="dist/images/error-flow-chart.svg" style="background: none; border: 0px">
-						</div>
-					</section>
-					<section>
-						<pre><code data-trim data-noescape class="console tiny-text">
-							$ spack spec hdf5@1.14 ^cmake@3.16
-							==> Error: concretization failed for the following reasons:
-
-							1. Cannot select a single "version" for package "cmake"
-							2. Cannot satisfy 'cmake@:3.17'
-							3. Cannot satisfy 'cmake@:3.16'
-							4. Cannot satisfy 'cmake@3.18:'
-							5. Cannot satisfy 'cmake@3.16'
-							6. Cannot satisfy 'cmake@3.18:'
-									required because hdf5 depends on cmake@3.18: when @1.13:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							7. Cannot satisfy 'cmake@3.16'
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							8. Cannot satisfy 'cmake@3.18:' and 'cmake@3.16
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-									required because hdf5 depends on cmake@3.18: when @1.13:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							9. Cannot satisfy 'cmake@3.16' and 'cmake@3.18:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-									required because hdf5 depends on cmake@3.18: when @1.13:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-							10. Cannot satisfy 'cmake@3.12:' and 'cmake@3.16
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
-									required because hdf5 depends on cmake@3.12:
-									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 						</code></pre>
 					</section>
 				</section>
@@ -776,7 +692,7 @@
 							hdf5:
 								require:
 								- spec: "%gcc"
-								message: "This package must be built with GCC"
+								  message: "This package must be built with GCC"
 						</code></pre>
 					</section>
 					<section>
@@ -833,15 +749,21 @@
 					</section>
 					<section>
 						<h2>Hands-on</h2>
-						<pre><code data-trim data-noescape class="bash">
-							# Add a requirement to configuration,
-							# try to violate it, check the error message
+						<pre><code data-trim data-noescape class="yaml">
+							# Try to violate this requirement, check the error message
+							packages:
+								hdf5:
+									require:
+									- spec: "~mpi"
+									  message: "HDF5 must be compiled without MPI"
 
-							# Do the same with a strong preference, observe
-							# spack solve weights
+							# Use a strong preference, and do the same
+							packages:
+								hdf5:
+								  prefer:
+								  - "~mpi"
 
-							# Enforce virtuals in an environment using
-							# requirements
+							# Enforce virtuals in an environment using requirements
 						</code></pre>
 					</section>
 				</section>
@@ -905,6 +827,90 @@
 
 							# https://dreampuf.github.io/GraphvizOnline
 							spack graph -d --color hdf5-vol-async ^openmpi
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How are errors modeled?</h2>
+					</section>
+					<section>
+						<code>clingo</code> is not that helpful on unsat problems
+						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
+							node("a").
+
+							attribute(P) :- node(P).
+							:- attribute(P).
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ clingo example.lp
+							clingo version 5.6.2
+							Reading from example.lp
+							Solving...
+							UNSATISFIABLE
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ spack spec foo
+							==> Error: UNSATISFIABLE
+						</code></pre>
+					</section>
+					<section>
+						Make errors part of a valid solution
+						<pre><code data-trim data-noescape data-line-numbers="1-4|4" class="prolog">
+							node("a").
+
+							attribute(P) :- node(P).
+							error("{P} cannot have an attribute!", P) :- attribute(P).
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ clingo example.lp
+							clingo version 5.6.2
+							Reading from example.lp
+							Solving...
+							Answer: 1
+							node("a") attribute("a") error("{P} cannot have an attribute!","a")
+							SATISFIABLE
+						</code></pre>
+						<pre><code data-trim data-noescape class="console">
+							$ spack spec foo
+							==> Error: foo cannot have an attribute!
+						</code></pre>
+					</section>
+					<section>
+						Highest priority optimization is <em>minimize errors</em>
+					</section>
+					<section>
+						<div>
+							<img src="dist/images/error-flow-chart.svg" style="background: none; border: 0px">
+						</div>
+					</section>
+					<section>
+						<pre><code data-trim data-noescape class="console tiny-text">
+							$ spack spec hdf5@1.14 ^cmake@3.16
+							==> Error: concretization failed for the following reasons:
+
+							1. Cannot select a single "version" for package "cmake"
+							2. Cannot satisfy 'cmake@:3.17'
+							3. Cannot satisfy 'cmake@:3.16'
+							4. Cannot satisfy 'cmake@3.18:'
+							5. Cannot satisfy 'cmake@3.16'
+							6. Cannot satisfy 'cmake@3.18:'
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							7. Cannot satisfy 'cmake@3.16'
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							8. Cannot satisfy 'cmake@3.18:' and 'cmake@3.16
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							9. Cannot satisfy 'cmake@3.16' and 'cmake@3.18:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.18: when @1.13:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+							10. Cannot satisfy 'cmake@3.12:' and 'cmake@3.16
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
+									required because hdf5 depends on cmake@3.12:
+									required because hdf5@1.14 ^cmake@3.16 requested explicitly
 						</code></pre>
 					</section>
 				</section>
